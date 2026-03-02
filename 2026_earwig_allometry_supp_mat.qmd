@@ -1,5 +1,5 @@
 ---
-title: "Supplemental Material: Hierarchical structure and plasticity of weapon allometry in a sexually dimorphic polymorphism."
+title: "Supplemental Material: Hierarchical structuring of weapon allometry and its evolutionary consequences."
 authors:
   - name: Céline Ozkan
     affiliations:
