@@ -1,0 +1,187 @@
+---
+title: "Supplemental Material: Hierarchical structure and plasticity of weapon allometry in a sexually dimorphic polymorphism."
+authors:
+  - name: Céline Ozkan
+    affiliations:
+      - ref: co
+    corresponding: false
+    email: celine.ozkan@etu.univ-lyon1.fr
+    orcid: 
+  - name: Clint D. Kelly
+    affiliations:
+      - ref: cdk
+    corresponding: true
+    email: kelly.clint@uqam.ca
+    orcid: 0000-0002-0693-7211
+    
+affiliations:
+  - id: cdk
+    name: Département des Sciences biologiques, Université du Québec à Montréal, Montréal, Canada
+  - id: co
+    name: Université Claude Bernard Lyon 1, Lyon, France
+
+filters:
+  - authors-block
+
+crossref:
+  tbl-title: Table S
+  fig-title: Figure S
+
+format:
+  docx:
+    toc: false
+    reference-doc: supp-template.docx
+---
+
+```{r echo=FALSE}
+knitr::read_chunk('scripts/2026_earwig_allometry.R')
+```
+
+```{r analysis, include=FALSE,echo=FALSE, warning=FALSE, results="hide"}
+```
+
+\newpage
+
+
+**Table S1.** Posterior summaries from the Bayesian sex-specific allometry model. The model estimated Gaussian regression of log forceps length including body size (logPc), sex, diet, density, and their interactions, with varying intercepts and slopes for mother identity (id_mere). Reported values are posterior medians and 95% credible intervals (CrI).
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+library(dplyr)
+library(stringr)
+library(flextable)
+
+post <- posterior_summary(mod_sex) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("Parameter") %>%
+  filter(!str_detect(Parameter, "lp__"))
+
+post <- post %>%
+  mutate(
+    Section = case_when(
+      str_detect(Parameter, "^b_") ~ "Fixed effects",
+      str_detect(Parameter, "^sd_") ~ "Among-mother SD",
+      str_detect(Parameter, "^cor_") ~ "Among-mother correlation (r)",
+      str_detect(Parameter, "^sigma") ~ "Residual SD"
+    )
+  ) %>%
+  filter(!is.na(Section))
+
+clean_labels_sex <- function(param) {
+
+  param <- str_replace(param, "^b_", "")
+  param <- str_replace_all(param, "logPc", "Body size")
+  param <- str_replace_all(param, "sexmale", "Sex (male)")
+  param <- str_replace_all(param, "dietPOOR", "Diet (poor)")
+  param <- str_replace_all(param, "density4", "Density = 4")
+  param <- str_replace_all(param, "density8", "Density = 8")
+  param <- str_replace_all(param, ":", " × ")
+  param <- str_replace_all(param, "Intercept", "Intercept")
+
+  param <- str_replace(param,
+                       "sd_id_mere__Intercept",
+                       "SD (Intercept)")
+  param <- str_replace(param,
+                       "sd_id_mere__logPc",
+                       "SD (Body size slope)")
+  param <- str_replace(param,
+                       "cor_id_mere__Intercept__logPc",
+                       "r (Intercept, Body size slope)")
+  param <- str_replace(param,
+                       "^sigma$",
+                       "Residual SD")
+
+  param
+}
+
+post$Parameter <- clean_labels_sex(post$Parameter)
+
+final_table <- post %>%
+  transmute(
+    Section,
+    Parameter,
+    Estimate = round(Estimate, 2),
+    `95% CrI` = paste0(round(Q2.5, 2), ", ", round(Q97.5, 2))
+  ) %>%
+  arrange(factor(Section,
+                 levels = c("Fixed effects",
+                            "Among-mother SD",
+                            "Among-mother correlation (r)",
+                            "Residual SD")))
+
+flextable(final_table) %>%
+  fontsize(size = 10, part = "all") %>%
+  autofit()
+```
+
+
+**Table S2.** Posterior summaries from the Bayesian morph-specific male allometry model. The model estimated Gaussian regression of log forceps length including body size (logPc), morph group, diet, density, and their interactions, with varying intercepts and slopes for mother identity (id_mere). Reported values are posterior medians and 95% credible intervals (CrI).
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+post <- posterior_summary(mod_morph) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("Parameter") %>%
+  filter(!str_detect(Parameter, "lp__"))
+
+post <- post %>%
+  mutate(
+    Section = case_when(
+      str_detect(Parameter, "^b_") ~ "Fixed effects",
+      str_detect(Parameter, "^sd_") ~ "Among-mother SD",
+      str_detect(Parameter, "^cor_") ~ "Among-mother correlation (r)",
+      str_detect(Parameter, "^sigma") ~ "Residual SD"
+    )
+  ) %>%
+  filter(!is.na(Section))
+
+clean_labels_morph <- function(param) {
+
+  param <- str_replace(param, "^b_", "")
+  param <- str_replace_all(param, "logPc", "Body size")
+  param <- str_replace_all(param, "group1", "Morph (macrolabic)")
+  param <- str_replace_all(param, "dietPOOR", "Diet (poor)")
+  param <- str_replace_all(param, "density4", "Density = 4")
+  param <- str_replace_all(param, "density8", "Density = 8")
+  param <- str_replace_all(param, ":", " × ")
+  param <- str_replace_all(param, "Intercept", "Intercept")
+
+  param <- str_replace(param,
+                       "sd_id_mere__Intercept",
+                       "SD (Intercept)")
+  param <- str_replace(param,
+                       "sd_id_mere__logPc",
+                       "SD (Body size slope)")
+  param <- str_replace(param,
+                       "cor_id_mere__Intercept__logPc",
+                       "r (Intercept, Body size slope)")
+  param <- str_replace(param,
+                       "^sigma$",
+                       "Residual SD")
+
+  param
+}
+
+post$Parameter <- clean_labels_morph(post$Parameter)
+
+final_table <- post %>%
+  transmute(
+    Section,
+    Parameter,
+    Estimate = round(Estimate, 2),
+    `95% CrI` = paste0(round(Q2.5, 2), ", ", round(Q97.5, 2))
+  ) %>%
+  arrange(factor(Section,
+                 levels = c("Fixed effects",
+                            "Among-mother SD",
+                            "Among-mother correlation (r)",
+                            "Residual SD")))
+
+flextable(final_table) %>%
+  fontsize(size = 10, part = "all") %>%
+  autofit()
+```

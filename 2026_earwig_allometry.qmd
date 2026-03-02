@@ -1,0 +1,230 @@
+---
+title: "Hierarchical structure and plasticity of weapon allometry in a sexually dimorphic polymorphism."
+
+authors:
+  - name: Céline Ozkan
+    affiliations:
+      - ref: co
+    corresponding: false
+    email: celine.ozkan@etu.univ-lyon1.fr
+    orcid: 
+  - name: Clint D. Kelly
+    affiliations:
+      - ref: cdk
+    corresponding: true
+    email: kelly.clint@uqam.ca
+    orcid: 0000-0002-0693-7211
+    
+affiliations:
+  - id: cdk
+    name: Département des Sciences biologiques, Université du Québec à Montréal, Montréal, Canada
+  - id: co
+    name: Université Claude Bernard Lyon 1, Lyon, France
+
+filters:
+  - authors-block
+  - iagopinal/figure-table-formatter
+  
+file-import: true
+
+format:
+  docx:
+    toc: false
+    reference-doc: word-style-template.docx
+bibliography: Bibliography.bib
+csl: evolution.csl
+---
+
+```{r echo=FALSE}
+knitr::read_chunk('scripts/2026_earwig_allometry.R')
+```
+
+```{r analysis, include=FALSE,echo=FALSE, warning=FALSE, results="hide"}
+```
+
+\newpage
+
+# Abstract
+Static allometries are often treated as stable descriptors of morphological architecture, yet scaling relationships themselves may evolve and respond plastically to environmental variation. We quantified sex-specific and morph-specific weapon allometries in the European earwig (Forficula auricularia) under experimental manipulation of developmental diet and density, while estimating among-family variation in intercepts and scaling exponents. Forceps length scaled positively with body size in both sexes, but males expressed steeper allometric slopes under favorable conditions. Nutritional stress reduced male scaling exponents toward female-like values, whereas increased developmental density amplified male slopes. Female scaling relationships were comparatively stable across environments. Within males, macrolabic and brachylabic morphs differed primarily in intercept rather than slope, indicating divergence in baseline allocation within a largely shared scaling framework. Among families, intercepts and slopes covaried positively, demonstrating integrated variation in exaggeration architecture. Together, these results reveal a hierarchical organization of weapon allometry: sex determines scaling plasticity, morphs diverge in baseline exaggeration, environments restructure scaling exponents, and families vary in coordinated intercept–slope architecture. Rather than reflecting fixed scaling rules, weapon allometries emerge as layered developmental outcomes and represent evolvable reaction norms of trait exaggeration.
+
+\newpage
+
+# Introduction
+Static allometry describes how trait size scales with body size among individuals at the same developmental stage and provides a central framework for understanding the evolution of exaggerated morphology. Sexually selected weapons often exhibit positive allometry, such that larger individuals invest disproportionately more in trait size (Kodric-Brown et al. 2006; Bonduriansky 2007; Voje 2016). However, hyperallometry is not universal. When traits serve dual sexual and viability functions, or when functional and mechanical constraints limit disproportionate investment, isometry or hypoallometry may evolve instead (Bonduriansky & Day 2003; Eberhard et al. 2018). Consequently, the scaling relationship itself reflects how developmental allocation, functional performance, and selection interact to shape trait architecture.
+
+Static allometry can diverge through changes in scaling exponent or through changes in intercept. Differences in scaling exponent reflect variation in how strongly a trait responds to body size, whereas intercept divergence reflects differences in baseline trait expression at a given body size. These components need not evolve together. Sexual dimorphism, for example, may arise because males and females differ in scaling sensitivity, in baseline allocation, or in both. Similarly, alternative male morphs may diverge through elevation shifts while retaining similar scaling exponents, or through fundamentally different scaling architectures. Distinguishing between slope-based and intercept-based divergence is therefore essential for understanding how exaggerated traits evolve.
+
+Species expressing alternative reproductive phenotypes provide particularly powerful systems for examining the structure of allometry. In such species, males adopt discrete morphs that differ in weapon size, behavior, and mating tactics (Gross 1996; Oliveira et al. 2008). Because morphs share much of their genome and developmental environment, differences in scaling architecture can reveal how developmental pathways partition exaggeration within a single species. Yet empirical analyses of morph-specific static allometry remain limited, and even fewer studies have examined how environmental conditions modify both slopes and intercepts within polymorphic systems (Kochensparger et al. 2024).
+
+The European earwig (Forficula auricularia) is a classic example of male weapon polymorphism. Males express discrete forceps morphs that differ markedly in size and curvature, commonly described as macrolabic and brachylabic forms (Simmons & Tomkins 1996; Tomkins et al. 2005). Forceps function both as sexual weapons during male–male interactions and as defensive structures, making them dual-function traits. Previous work has documented morph-specific differences in forceps exaggeration and scaling, suggesting that divergence occurs not only in absolute size but potentially in scaling architecture. However, most studies have focused on static comparisons of slopes, and less attention has been given to intercept divergence, environmental sensitivity of scaling parameters, and variation among families.
+
+Environmental conditions can alter developmental allocation and thereby reshape static allometries. Nutritional stress may reduce baseline investment in exaggerated traits, shifting intercepts downward, whereas social conditions such as rearing density may modify competitive allocation patterns. Environmental effects on scaling exponents would indicate plasticity in the relationship between trait and body size, whereas stability of slopes across environments would suggest canalization of scaling architecture. Understanding whether environmental variation modifies intercepts, slopes, or both is therefore central to evaluating the developmental flexibility of exaggeration.
+
+In addition to sex, morph, and environment, variation among families provides insight into the integration of scaling architecture. Intercept and slope may covary among lineages if developmental processes jointly regulate baseline allocation and scaling sensitivity. Positive intercept–slope covariance would indicate that families producing relatively larger weapons at mean body size also exhibit steeper scaling relationships, reflecting integrated exaggeration architecture. Alternatively, independence between parameters would suggest modularity or developmental decoupling of baseline exaggeration and scaling sensitivity.
+
+Here, we quantify sex-specific and morph-specific static allometries of forceps length in F. auricularia under experimentally manipulated diet and density. Rather than treating the scaling exponent as a fixed descriptor of trait architecture, we test whether it behaves as a condition-sensitive developmental parameter structured across biological levels. Specifically, we ask whether sexual dimorphism in weapon exaggeration reflects divergence in scaling exponent, intercept, or both; whether macrolabic and brachylabic males differ primarily in baseline allocation or in the sensitivity of forceps growth to body size; and whether environmental conditions modify intercepts, slopes, or their covariance. Finally, by estimating among-family variance in intercepts and scaling exponents, we assess whether baseline exaggeration and size sensitivity are developmentally integrated. By integrating sex, morph, environment, and family-level components within a unified hierarchical framework, we evaluate whether static allometry represents a stable architectural constant or an emergent property of layered growth regulation (see also Simmons & Tomkins 1996; Tomkins et al. 2005; Kelly 2025).
+
+# Methods
+
+### Study species and experimental design
+Females (n = 115) were hand-collected at night from vegetation in Parc Outremont (Montréal, QC, Canada) during September and October 2024. Individuals were transported to the laboratory at the Université du Québec à Montréal and placed individually in 90-mm Petri dishes filled with moist sand. Each dish was provisioned with a cotton-plugged water tube and TetraMin Tropical Flakes (United Pet Group, Inc., Germany), and each female was assigned a unique ID code.
+
+Earwigs were maintained in the dark at 10 °C in an incubator (Percival Scientific, Perry, IA, USA) to simulate overwintering conditions. Dishes were checked daily for egg laying, and food and water were replaced as needed. Food and water were removed at the time of egg laying (approximately early December), after which dishes were checked weekly. Beginning in early January 2025, dishes were checked daily for egg hatching. The date of egg hatching was recorded; hatching occurred between 13 January and 29 January 2025, and all 115 females produced hatchlings.
+
+For two weeks following hatching, families were provisioned with a water tube and food (TetraMin Tropical Flakes). This interval allowed nymphs to complete a moult and reach a size sufficient to withstand manual transfer to experimental dishes. To manipulate developmental environment, we varied two ecological factors: nutritional condition (diet quality) and social density.
+
+Diet treatment consisted of two levels: a “good” diet (100% TetraMin Tropical Flakes) providing high nutritional quality and a “poor” diet (75% TetraMin Tropical Flakes, 25% alpha-cellulose) providing reduced nutritional content. Density treatment consisted of three levels: low density (one individual per Petri dish), medium density (4 individuals), and high density (8 individuals). These treatments allowed us to examine both nutritional and social environmental effects on growth and morphology.
+
+We used a split-brood experimental design in which offspring were randomly assigned to diet and density treatments within maternal families to minimise confounding between maternal background and environmental treatment. Experimental dishes were maintained at 20 °C to simulate post-winter developmental conditions and contained a water tube, treatment-specific food, and a refuge (four small pieces of paper straw glued together). A total of 1,265 Petri dishes were prepared.
+
+Females (mothers) were euthanized by freezing at −20 °C after offspring were allocated to treatments. Dishes were checked several times per week for mortality and sexual maturation, and food and water were replaced as needed.
+
+### Morphological measurements
+Once offspring eclosed to adulthood, they were removed from their Petri dish, the date recorded, and assigned a unique ID code. Pronotum width (a proxy for overall body size) and forceps length (following @vanlieshout2009) were photographed under a Leica S6D stereo microscope (Leica Microsystems Inc., Concord, ON, Canada) at 0.68× magnification using Enersight software, which automatically adds a scale bar to each image. Measurements were taken to the nearest 0.001 mm using Fiji image analysis software (Schindelin et al., 2012). All measurements were taken blind to treatment where possible.
+
+To assess repeatability, a subset of 30 individuals was measured twice. Intraclass correlation coefficients indicated high repeatability (pronotum width ICC = 0.94; forceps length ICC = 0.97).
+
+Log-transformed pronotum width was mean-centered prior to analysis to facilitate interpretation of intercepts and reduce collinearity among predictors.
+
+### Data preparation
+All analyses were conducted in R. We retained individuals from experimental dishes that met predefined density criteria to maintain experimental integrity of density treatments (density 1: one survivor; density 4: ≥3 survivors; density 8: ≥6 survivors). Individuals lacking sex information were excluded.
+
+Forceps length and pronotum width were log-transformed prior to analysis to linearize allometric relationships and reduce heteroscedasticity. Log pronotum width was mean-centered to facilitate interpretation of intercepts and reduce collinearity in interaction models. GOOD diet and density 1 were treated as reference levels throughout. Female sex and brachylabic males served as reference categories where appropriate. Maternal identity was included as a grouping factor in all models to account for shared developmental background among siblings.
+
+
+### Male morph classification
+Male morphs (brachylabic and macrolabic) were classified using finite mixture modelling in the R package mixsmsn. Consistent with the documented weapon dimorphism in earwigs, we modelled the distribution of raw male forceps length as a two-component skew-normal mixture.
+
+Forceps length was analysed without prior size correction so that morph classification reflects emergent weapon phenotype rather than residual variation after size correction. Models were estimated using the expectation–maximization algorithm with automatic initialization (maximum 1000 iterations). Model support for bimodality was evaluated using AIC and BIC.
+
+Posterior probabilities of component membership were obtained for each male, and individuals were assigned to morphs based on maximum posterior probability. All males were retained for subsequent analyses, thereby avoiding arbitrary trait thresholds and preserving variation near the morph boundary.
+
+### Sex-specific allometry
+To test whether males and females differed in forceps allometry and in the environmental sensitivity of scaling relationships, we fitted a hierarchical 
+
+Gaussian model with log-transformed forceps length as the response. Fixed effects included mean-centered log pronotum width, sex, diet, density, and all lower-order interactions necessary to test sex differences in intercepts and scaling exponents across environmental treatments. Interactions between body size and environmental variables allowed scaling exponents to vary across conditions, and three-way interactions with sex tested whether environmental sensitivity of scaling differed between males and females.
+
+Maternal identity was included as a random intercept and random slope for body size, allowing families to vary in baseline forceps size and scaling exponent.
+
+### Morph-specific allometry
+To examine scaling architecture within males, we fitted a second model restricted to males. Log-transformed forceps length was modeled as a function of body size, morph (macrolabic versus brachylabic), diet, density, and all corresponding interactions. Body size × morph interactions tested for baseline slope divergence between morphs, and three-way interactions with environmental factors evaluated morph-specific slope plasticity.
+
+As morph classification was based on absolute forceps expression, this analysis tests whether emergent weapon phenotypes differ in scaling architecture without imposing size correction prior to morph assignment.
+
+Maternal identity was again included as a random intercept and slope for body size.
+
+### Priors and model fitting
+Models were fitted in a Bayesian framework using multilevel Gaussian regression. Weakly informative priors were specified for fixed effects and variance components to regularize estimates while remaining non-restrictive on the log scale. Convergence and sampling adequacy were verified using standard diagnostics.
+
+### Estimation of scaling exponents and plasticity
+Condition-specific allometric slopes were derived from posterior draws as linear combinations of regression coefficients. Environmental plasticity in scaling was quantified as the deviation in slope from the reference condition (GOOD diet, density 1). We report posterior medians and 95% credible intervals for all slopes and slope differences.
+
+To evaluate biological relevance, we also calculated posterior probabilities that slope changes exceeded zero and that their absolute magnitude exceeded 0.1 on the log–log scale. All inference is based on posterior distributions rather than null-hypothesis significance testing.
+
+
+# Results
+Sexual dimorphism in scaling relationships
+Forceps length scaled positively with pronotum length in both sexes across all environmental treatments (Figure 1). Females exhibited a continuous distribution of weapon sizes across body sizes (mean pronotum length = X mm; mean forceps length = X mm), whereas males formed two discrete clusters corresponding to brachylabic (mean pronotum = X mm; mean forceps = X mm) and macrolabic morphs (mean pronotum = X mm; mean forceps = X mm). Morphs differed primarily in forceps length at a given body size, with substantial overlap in pronotum length between morphotypes. Environmental treatments shifted the distribution of forceps length within sexes and morphs but did not eliminate the clear separation between male morphs or the overall positive scaling relationship.
+
+Weapon allometry differed markedly between the sexes (Figures 2–4). Under good diet and low-density conditions (reference levels), females exhibited a positive but moderate scaling relationship between forceps length and body size (posterior mean slope = 0.33, 95% CrI: 0.10–0.57). Males showed substantially steeper scaling, as indicated by the positive interaction between body size and sex (logPc × sexmale = 0.53, 95% CrI: 0.21–0.83). Under baseline conditions, the implied male slope was 0.86 (95% CrI: 0.64–1.08). The posterior probability that male slopes exceeded female slopes was > 0.999, indicating pronounced sexual dimorphism in scaling exponent.
+Sexes also differed strongly in intercept. At mean body size, males had larger forceps than females (sexmale = 0.28, 95% CrI: 0.26–0.31), demonstrating clear size dimorphism independent of slope differences. Thus, sexual dimorphism in weapon exaggeration reflects divergence in both scaling exponent and mean trait size.
+
+### Sex-specific environmental sensitivity
+#### Intercept plasticity
+Environmental effects on intercept were sex biased. Poor diet reduced forceps size at mean body size in females (dietPOOR = −0.06, 95% CrI: −0.08 to −0.04). This reduction was substantially stronger in males, as indicated by the negative sex × diet interaction (sexmale:dietPOOR = −0.10, 95% CrI: −0.13 to −0.06), yielding a total male intercept decline of approximately −0.16 under poor diet.
+
+Density effects on female intercepts were weak. In contrast, males exhibited positive intercept shifts at higher densities (sexmale:density4 = 0.05; sexmale:density8 = 0.08, both credible intervals excluding zero). Thus, males were more environmentally sensitive than females in mean weapon size, showing both nutritional suppression and density-associated increases in exaggeration.
+
+#### Slope plasticity
+Female slopes were relatively stable across environments. The interaction between body size and diet was centered near zero (logPc:dietPOOR = −0.01, 95% CrI: −0.25 to 0.23), and density interactions similarly overlapped zero. Posterior slope contrasts confirmed minimal female slope plasticity (Figure 4).
+In contrast, male scaling was strongly environment-dependent. Under poor diet, the male slope declined substantially, as indicated by the negative three-way interaction (logPc × sexmale × dietPOOR = −0.53, 95% CrI: −0.87 to −0.19). This corresponds to a reduction from approximately 0.86 under good diet to approximately 0.32 under poor diet. Posterior probability that male slope decreased under poor diet exceeded 0.999, and the probability that the magnitude of change exceeded 0.1 was > 0.99.
+
+Density had the opposite effect, increasing male slopes at densities 4 and 8 (logPc × sexmale × density4 = 0.40; logPc × sexmale × density8 = 0.40; both credible intervals excluding zero). Posterior probabilities that male slope increases exceeded 0.1 were > 0.95. Across treatments, male slope plasticity exceeded female slope plasticity with high probability (> 0.95).
+
+Together, these results demonstrate pronounced male-specific plasticity in scaling exponent, whereas female scaling relationships appear comparatively canalized.
+
+### Morph differences among males
+Given the strong male-specific plasticity, we next examined scaling architecture within males.
+
+#### Baseline morph differences
+Under good diet and low-density conditions, brachylabic males exhibited a slope of 0.36 (95% CrI: 0.14–0.57). Macrolabic males showed a nearly identical baseline slope (logPc:group1 = 0.02, 95% CrI: −0.30–0.34), with posterior probability of a positive difference equal to 0.56. Thus, there was little evidence of baseline slope divergence between morphs.
+
+Morphs differed strongly in intercept. At mean body size, macrolabic males had substantially larger forceps than brachylabic males (group1 = 0.31, 95% CrI: 0.28–0.34). Morph divergence in weapon size is therefore primarily elevation-based rather than slope-based.
+
+#### Morph-specific environmental sensitivity
+Diet had little effect on intercept in brachylabic males (dietPOOR = −0.01, 95% CrI: −0.04 to 0.01), but reduced intercept in macrolabic males (group1:dietPOOR = −0.11, 95% CrI: −0.16 to −0.07). Nutritional stress therefore disproportionately reduced weapon size in the exaggerated morph.
+Both morphs showed some tendency toward reduced scaling exponents under poor diet. In brachylabic males, slope decline was modest (logPc:dietPOOR = −0.11, 95% CrI: −0.35 to 0.13). In macrolabic males, the additional diet-dependent slope change was negative but uncertain (logPc:group1:dietPOOR = −0.24, 95% CrI: −0.75 to 0.27). Posterior contrasts indicated that diet-induced slope plasticity tended to be greater in macrolabic than brachylabic males (posterior probability ≈ 0.84), although credible intervals were broad.
+
+Density-induced slope changes were comparatively weak and uncertain in both morphs, and there was little evidence that density altered scaling exponents differently between morphs.
+
+Overall, within males, morph differentiation primarily reflects intercept shifts rather than fundamentally distinct scaling exponents.
+
+### Among-family variation
+At the sex level, there was detectable among-maternal-family variance in scaling exponent (sd(logPc) = 0.13, 95% CrI: 0.01–0.25) and smaller variance in intercept (sd(Intercept) = 0.03). The intercept–slope correlation was weak and uncertain (r = 0.18, 95% CrI overlapping zero), suggesting limited evidence for integrated family-level variation across sexes.
+
+Within males, family-level variation in slope was larger (sd(logPc) = 0.18, 95% CrI: 0.09–0.27). Intercepts and slopes were positively correlated among families (r = 0.63, 95% CrI: 0.12–0.94), indicating that broods producing sons with larger forceps at mean body size also tended to exhibit steeper scaling relationships.
+
+Because females were field-collected and potentially multiply mated, these variance components reflect combined genetic and shared environmental effects. Nonetheless, the positive covariance demonstrates integrated brood-level variation in exaggeration architecture.
+
+### Summary
+Weapon allometry exhibits a hierarchical structure. Sexual dimorphism is characterized by steeper and more environmentally sensitive scaling in males relative to females. Within males, morph divergence is primarily intercept-based, with macrolabic males expressing consistently larger weapons and stronger intercept sensitivity to nutritional stress. Slope plasticity is pronounced at the sex level and present within males, although baseline slopes are similar across morphs. Finally, scaling intercepts and exponents covary positively among maternal families within males, indicating integrated brood-level variation in exaggeration architecture.
+
+# Discussion
+Static allometries are often treated as stable descriptors of morphological architecture (Huxley 1932; Gould 1966; Voje 2016). Our results challenge this view by demonstrating that the scaling exponent itself can function as a condition-sensitive developmental trait structured across biological levels. In this earwig, weapon exaggeration is not defined by a single static slope, but by reaction norms of scaling that differ between sexes, vary across environments, and covary among families. Males expressed steep positive allometry under favorable conditions, consistent with expectations for sexually selected weapons (Kodric-Brown et al. 2006; Bonduriansky 2007), yet their scaling exponents collapsed toward female-like values under nutritional stress and steepened under increased density. Females, by contrast, exhibited comparatively stable scaling relationships across environments. These findings indicate that the allometric slope is not a fixed architectural constant but an environmentally responsive parameter of growth regulation, extending theory on condition dependence beyond mean trait expression to the structure of scaling itself (Rowe & Houle 1996; Cotton et al. 2004; Tomkins et al. 2004; Pélabon et al. 2014). Rather than reflecting fixed scaling rules, static allometries emerge here as layered developmental outcomes shaped by sex-specific regulation, environmental inputs, and family-level integration.
+
+The evolution of exaggerated traits is frequently interpreted through the lens of condition dependence and genic capture theory (Rowe and Houle 1996; Cotton et al. 2004; Tomkins et al. 2004), which predict heightened environmental sensitivity of sexually selected characters. Most empirical work has focused on mean trait expression, yet theory does not restrict condition dependence to intercept shifts. If growth regulation is condition sensitive, the scaling exponent itself should respond to environmental inputs. Our findings provide direct evidence for such slope plasticity in a weapon trait. Under poor diet, larger males disproportionately reduce investment, flattening the allometric slope. Under higher density, larger males exaggerate more strongly, steepening the slope. Thus, male weapon exaggeration is modulated not only by overall allocation but by environment-dependent restructuring of the size–trait relationship. This suggests that the evolution of exaggerated weapons may proceed through selection acting on reaction norms of scaling rather than on static exponents alone.
+
+The absence of strong slope divergence between brachylabic and macrolabic males refines the interpretation of morph differentiation. Although macrolabic males express substantially larger forceps at a given body size, their baseline scaling exponent is similar to that of brachylabics. Morph divergence is therefore primarily elevation-based rather than slope-based. Distinguishing intercept from slope evolution is critical because these parameters reflect different aspects of growth regulation: slope captures sensitivity of trait size to body size, whereas intercept reflects baseline allocation at a given size (Bonduriansky & Day 2003; Pélabon et al. 2014). Elevation shifts without major changes in exponent suggest modification of allocation magnitude within a largely shared scaling framework. This pattern is broadly consistent with environmental threshold models of conditional strategy evolution (Hazel et al. 1990; Tomkins & Hazel 2007; Buzatto et al. 2015), in which discrete phenotypes arise once condition surpasses a developmental threshold, while underlying size-dependent growth relationships remain partially conserved. In such systems, morph determination may alter mean trait expression without fundamentally reorganizing the scaling architecture. Our results therefore suggest that the earwig weapon dimorphism reflects divergence in baseline allocation rather than the evolution of distinct allometric programs.
+
+An additional feature of our data bears on the developmental basis of morph determination. Although macrolabic males exhibit substantially larger forceps on average, there is clear overlap in body size between morphs, with some small males expressing the macrolabic phenotype and many large males remaining brachylabic. If morph expression were determined solely by a deterministic body-size threshold, one would expect a sharper transition, with large males consistently expressing the exaggerated morph. The observed overlap therefore suggests that adult body size alone is insufficient to predict morph identity. Previous work has debated whether the forceps dimorphism in F. auricularia reflects a purely status-dependent threshold mechanism or whether genetic factors contribute to morph determination (Tomkins 1999). That study demonstrated both environmental and genetic components to morph expression, raising the possibility that morph identity is not a simple function of condition or size alone. Our results are consistent with this view. The strong intercept divergence between morphs, coupled with broadly similar scaling exponents, suggests that macrolabic and brachylabic males may represent alternative developmental programs that share a common scaling architecture but differ in baseline allocation to forceps length. Although we cannot directly estimate the heritability of morph identity, the overlap in body size between morphs, together with detectable among-family variation in scaling parameters, indicates that the developmental regulation of forceps dimorphism is likely more complex than a simple size-based switch.
+
+This hierarchical structure—sex-specific slope plasticity combined with morph-specific intercept divergence—suggests that exaggeration evolves through layered modifications of growth regulation. Sex-limited expression may first decouple male scaling from female scaling, allowing male reaction norms of scaling to evolve heightened environmental sensitivity. Within males, morph differentiation may then alter allocation magnitude without fully restructuring exponent dynamics. Such partial decoupling could preserve developmental integration while permitting exaggerated phenotypes to emerge.
+
+The positive covariance between intercept and slope among maternal families within males provides important insight into the developmental integration and evolvability of weapon exaggeration. Families producing sons with relatively larger forceps at mean body size also tended to exhibit steeper scaling exponents, indicating coordinated variation in baseline allocation and size sensitivity. Intercept and slope are theoretically separable components of static allometry, and their covariance structure determines how scaling relationships can respond to selection (Bonduriansky & Day 2003; Pélabon et al. 2014). Positive intercept–slope covariance implies that selection favoring increased exaggeration at a given body size may simultaneously increase scaling exponent, thereby amplifying disproportionate investment in larger individuals. Such integration can accelerate evolutionary divergence in exaggeration intensity if genetic variance underlies these brood-level differences (Lande 1980; Pélabon et al. 2014). Although our family effects combine genetic and shared environmental components, the presence of structured covariance demonstrates that scaling architecture itself varies among lineages rather than being developmentally fixed. This integrated variation provides raw material upon which selection can act, reinforcing the view that static allometry is an evolvable trait complex rather than a static descriptor of morphology. Together with sex-specific slope plasticity and morph-specific intercept divergence, this family-level integration reveals that weapon exaggeration is structured hierarchically not only across phenotypic levels but also across sources of variation within populations.
+
+Taken together, these results advance a view of static allometry as an evolvable and environmentally responsive trait complex. Rather than treating the scaling exponent as a fixed parameter of morphological design, our findings support interpreting it as a condition-sensitive reaction norm that can differ between sexes and vary among families. Sexual dimorphism in scaling thus reflects not only differences in trait size, but differences in how growth responds to environmental inputs. Within males, morph divergence largely reflects shifts in allocation baseline, while the underlying scaling exponent remains broadly shared. The positive covariance between intercept and slope further indicates that baseline exaggeration and scaling sensitivity are developmentally integrated, providing coordinated variation upon which selection can act. Together, these patterns suggest that the evolution of exaggerated weapons is structured not simply by changes in mean trait size, but by hierarchical modification of growth regulation across sexes, morphs, and lineages. More broadly, our results underscore that the evolutionary dynamics of exaggeration may depend as much on the plasticity and integration of scaling relationships as on the magnitude of exaggeration itself.
+
+# Data availability
+
+Data are available through the OSF repository at 10.17605/OSF.IO/MFJ8E.
+
+# Funding
+
+The study was funded by a Discovery Grant from the Natural Sciences and Engineering Research Council of Canada (NSERC) to CDK.
+
+# Conflict of Interest
+
+We declare no conflicts of interest.
+
+# Acknowledgements
+
+We thank Andreanne Nault for her help in the lab.
+
+\newpage
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
+
+\newpage
+
+## Figures
+::: {#fig-one fig-cap="Static allometries of forceps length as a function of pronotum length across density treatments (low, medium, high). Females (top row) and males (bottom row) are shown separately. In males, brachylabic (solid points) and macrolabic (open points) morphs are distinguished, with diet treatments indicated by shading. Males form two discrete clusters corresponding to morphotype, with substantial overlap in body size between morphs. Environmental treatments shift forceps length within morphs but do not eliminate size overlap. The dashed horizontal line in male panels indicates the approximate threshold commonly used to distinguish morphs based on forceps length."}
+![](figure_1.jpg)
+:::
+
+::: {#fig-two fig-cap="Predicted population-level relationships between log-transformed forceps length and log-transformed pronotum width across diet (GOOD vs POOR) and rearing density (1, 4, or 8 individuals per container). Panels show females (left), brachylabic males (center), and macrolabic males (right). Solid, dashed, and dotted lines correspond to density treatments; color indicates diet. Fitted lines represent posterior medians from Bayesian multilevel models excluding random family effects; grey points show raw data. Female slopes are relatively stable across environments, whereas male slopes exhibit pronounced environmental sensitivity. Morph divergence in males is primarily intercept-based, with macrolabic males exhibiting consistently larger forceps at a given body size and stronger slope reductions under poor diet."}
+![](figure_2.jpg)
+:::
+
+\newpage
+
+::: {#fig-three fig-cap="Points represent posterior medians and horizontal bars indicate 95% credible intervals for slopes relating log forceps length to log pronotum width. Treatments are grouped by diet (GOOD vs POOR) and density (1, 4, or 8 individuals per container). The vertical dotted line indicates zero slope. Female slopes cluster tightly and show little environmental sensitivity. In contrast, male slopes vary substantially across environments, with macrolabic males exhibiting a higher posterior probability of substantial slope reduction under poor diet than brachylabic males. These estimates are derived from Bayesian multilevel models incorporating among-family variance."}
+![](figure_3.jpg)
+:::
+
+::: {#fig-four fig-cap="Points show posterior median changes in allometric slope (Δβ) of log(forceps length) on log(pronotum width) relative to the baseline condition (GOOD diet, density 1). Horizontal bars represent 95% credible intervals. The vertical dashed line at 0 indicates no change in slope relative to baseline; dotted lines indicate a biologically meaningful threshold of |Δβ| = 0.1.Females show little evidence of slope plasticity across environmental conditions, with credible intervals broadly overlapping zero. Brachylabic males exhibit weak slope sensitivity to diet and density. In contrast, macrolabic males show the strongest environmentally induced changes in scaling, particularly under poor diet conditions, consistent with greater environmental sensitivity of exaggerated weapon expression.
+"}
+![](figure_4.jpg)
+:::
