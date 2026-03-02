@@ -83,6 +83,11 @@ dat.new <- left_join(earwig_data,earwig_two, by="boite_petri") %>%
 
 # save(males,file="data/processed/males.Rda")
 
+males %>%
+arrange(forceps_L) %>%
+  as.tibble() %>%
+  print(n=1000) # to determin brachy vs macro cut-off
+
 ## FEMALES ##
 # females <- dat.new %>%
 #   filter(sex=="female") %>%
@@ -135,6 +140,18 @@ summary.table <- dat.morphs %>%
   group_by(group,diet,density) %>%
   summarise(n=n())
 
+summary.table.2 <- dat.morphs %>%
+  group_by(group) %>%
+  summarize(mean_for = mean(forceps_L, na.rm = TRUE),
+            sd.forceps = sd(forceps_L, na.rm = TRUE),
+            n = n(), # counts the number of observations in the current group
+            se.forceps = sd.forceps / sqrt(n), # standard error formula
+            mean.pr = mean(pronotum,na.rm=TRUE),
+            sd.pro = sd(pronotum, na.rm=TRUE),
+            se.pro = sd.pro/sqrt(n),
+            .groups = 'drop' # drops the grouping structure after summarizing
+    )
+
 # sex difference
 formula_sex <- bf(
   logF ~ logPc * sex * diet +
@@ -175,7 +192,7 @@ priors_sex <- c(
 # 
 # saveRDS(mod_sex, file = "mod_sex.Rds")
 mod_sex <- readRDS(file = "data/processed/mod_sex.Rds")
-
+tidy(mod_sex)
 #### Compute Posterior Slopes per Sex × Environment
 library(emmeans)
 
@@ -469,7 +486,7 @@ raw_data$panel <- factor(
   levels = c("Female", "Brachylabic male", "Macrolabic male")
 ) 
 
-figure_1 <- ggplot(plot_data,
+figure_2 <- ggplot(plot_data,
        aes(x = logPc,
            y = fit,
            color = diet,
@@ -507,7 +524,7 @@ figure_1 <- ggplot(plot_data,
     legend.position = c(0.1, 0.75)
   )
 
-ggsave(figure_1, filename="figure_1.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
+ggsave(figure_2, filename="figure_2.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
 
 ### Slopes forect plot
@@ -610,7 +627,7 @@ slope_df$group <- factor(
 ) 
 
 
-figure_2 <- ggplot(slope_df,
+figure_3 <- ggplot(slope_df,
        aes(x = median,
            y = treatment)) +
   
@@ -650,7 +667,7 @@ figure_2 <- ggplot(slope_df,
     strip.text = element_text(size=14,face = "bold"),
   )
 
-ggsave(figure_2, filename="figure_2.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
+ggsave(figure_3, filename="figure_3.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
 
 ###
@@ -746,7 +763,7 @@ delta_df$environment <- factor(
   levels = c("POOR diet", "Density 4", "Density 8")
 )
 
-figure_delta <- ggplot(delta_df,
+figure_4 <- ggplot(delta_df,
                        aes(x = median,
                            y = environment)) +
   
@@ -782,8 +799,8 @@ figure_delta <- ggplot(delta_df,
     axis.text = element_text(size = 12)
   )
 
-ggsave(figure_delta,
-       filename = "figure_3.jpg",
+ggsave(figure_4,
+       filename = "figure_4.jpg",
        width = 11,
        height = 7,
        dpi = 300)
@@ -848,7 +865,7 @@ forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label
   xlab("Pronotum length (mm)") +
   ylab("Forceps length (mm)")
 
-forceps.body.plot.both.final <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
+figure_1 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
   ggside(collapse="y") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
@@ -861,5 +878,6 @@ forceps.body.plot.both.final <- forceps.body.plot.both + geom_ysidedensity(aes(x
   theme(strip.background = element_rect(fill="white")) +
   theme(ggside.axis.text.x = element_blank()) +
   theme(ggside.axis.ticks.x = element_blank())
-ggsave(forceps.body.plot.both.final,filename="Figure_4.jpg", width=14.83, height=8.83, dpi=800,antialias="default")
+
+ggsave(figure_1,filename="Figure_1.jpg", width=14.83, height=8.83, dpi=800,antialias="default")
 
