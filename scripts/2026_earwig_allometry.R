@@ -27,6 +27,7 @@ library(mixsmsn)
 library(cmdstanr)
 library(ggside)
 library(posterior)
+library(emmeans)
 
 earwig_data_raw <- read.csv(file="data/raw/earwig_allometry.csv", header=TRUE, sep=",", dec=".") %>%
   as.data.frame()
@@ -195,7 +196,6 @@ priors_sex <- c(
 mod_sex <- readRDS(file = "data/processed/mod_sex.Rds")
 
 #### Compute Posterior Slopes per Sex × Environment
-library(emmeans)
 
 # Slopes for all combinations
 slopes_sex <- emtrends(
