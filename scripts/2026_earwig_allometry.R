@@ -26,6 +26,7 @@ library(mixtools)
 library(mixsmsn)
 library(cmdstanr)
 library(ggside)
+library(posterior)
 
 earwig_data_raw <- read.csv(file="data/raw/earwig_allometry.csv", header=TRUE, sep=",", dec=".") %>%
   as.data.frame()
@@ -83,15 +84,15 @@ dat.new <- left_join(earwig_data,earwig_two, by="boite_petri") %>%
 
 # save(males,file="data/processed/males.Rda")
 
-males %>%
-arrange(forceps_L) %>%
-  as.tibble() %>%
-  print(n=1000) # to determin brachy vs macro cut-off
+# males %>%
+# arrange(forceps_L) %>%
+#   as.tibble() %>%
+#   print(n=1000) # to determine brachy vs macro cut-off
 
 ## FEMALES ##
 # females <- dat.new %>%
 #   filter(sex=="female") %>%
-#   mutate(group=3)
+#   mutate(group=3, morph="female")
 # str(females)
 # 
 # # save(females,file="data/processed/females.Rda")
@@ -106,8 +107,8 @@ load(file ="data/processed/dat.morphs.Rda")
 
 # # smsn.mix not categorizing individual correctly: he's clearly a minor
 # dat.morphs <- dat.morphs %>%
-#   mutate(group=replace(group, id=="DJODI", "2")) 
-# 
+#   mutate(group=replace(group, id=="DJODI", "2"))
+# # 
 # # earwig_data_complete %>%
 # #   filter(id=="DJODI")
 # # earwig_data_complete %>%
@@ -126,7 +127,7 @@ dat.morphs <- dat.morphs %>%
     logP  = log(pronotum),
     logPc = scale(logP, scale = FALSE)[,1],  # mean center
     sex   = factor(sex),
-    group = factor(group),
+    group = factor(morph),
     diet  = factor(diet),
     density = factor(density)
   )
@@ -137,11 +138,11 @@ dat.morphs$diet    <- relevel(dat.morphs$diet, ref = "GOOD")
 dat.morphs$density <- relevel(dat.morphs$density, ref = "1")
 
 summary.table <- dat.morphs %>%
-  group_by(group,diet,density) %>%
+  group_by(morph,diet,density) %>%
   summarise(n=n())
 
 summary.table.2 <- dat.morphs %>%
-  group_by(group) %>%
+  group_by(morph) %>%
   summarize(mean_for = mean(forceps_L, na.rm = TRUE),
             sd.forceps = sd(forceps_L, na.rm = TRUE),
             n = n(), # counts the number of observations in the current group
@@ -189,10 +190,10 @@ priors_sex <- c(
 #      file = "data/processed/mod_sex.Rds",
 #   control = list(adapt_delta = 0.97)
 # )
-# 
+
 # saveRDS(mod_sex, file = "mod_sex.Rds")
 mod_sex <- readRDS(file = "data/processed/mod_sex.Rds")
-tidy(mod_sex)
+
 #### Compute Posterior Slopes per Sex × Environment
 library(emmeans)
 
@@ -212,8 +213,6 @@ male_vs_female <- pairs(
 )
 
 summary(male_vs_female)
-
-library(posterior)
 
 # Extract posterior draws
 draws <- as_draws_df(mod_sex)
@@ -287,13 +286,14 @@ delta_female_density8  <- female_good_d8 - female_good_d1
 mean(abs(delta_female_density4) > 0.1)
 mean(abs(delta_female_density8) > 0.1)
 
-# males only
+### MALES ONLY
 males <- subset(dat.morphs, sex == "male")
-males$group <- relevel(males$group, ref = "2")  # brachylabic as reference
+males$morph <- factor(males$morph)
+males$morph <- relevel(males$morph, ref = "minor")  # brachylabic as reference
 
 formula_morph <- bf(
-  logF ~ logPc * group * diet +
-    logPc * group * density +
+  logF ~ logPc * morph * diet +
+    logPc * morph * density +
     (1 + logPc | id_mere)
 )
 
@@ -331,15 +331,14 @@ priors_morph <- c(
 # saveRDS(mod_morph, file = "mod_morph.Rds")
 
 mod_morph <- readRDS(file = "data/processed/mod_morph.Rds")
-
+tidy(mod_morph)
 draws <- as_draws_df(mod_morph)
 
 # Baseline Slopes (GOOD diet, density 1):
 # Do macrolabic and brachylabic males differ in their allometric slope under the reference environmental conditions?
 beta_brachy_good_d1 <- draws$b_logPc
 
-beta_macro_good_d1 <- draws$b_logPc + draws$`b_logPc:group1`
-
+beta_macro_good_d1 <- draws$b_logPc + draws$`b_logPc:morphmajor`
 delta_baseline <- beta_macro_good_d1 - beta_brachy_good_d1
 
 mean(delta_baseline > 0)
@@ -349,7 +348,7 @@ quantile(delta_baseline, c(.025, .5, .975)) # baseline slopes are not different
 beta_brachy_poor_d1 <- beta_brachy_good_d1 + draws$`b_logPc:dietPOOR`
 beta_macro_poor_d1 <- beta_macro_good_d1 +
   draws$`b_logPc:dietPOOR` +
-  draws$`b_logPc:group1:dietPOOR`
+  draws$`b_logPc:morphmajor:dietPOOR`
 delta_brachy_diet <- beta_brachy_poor_d1 - beta_brachy_good_d1
 delta_macro_diet  <- beta_macro_poor_d1  - beta_macro_good_d1
 
@@ -366,7 +365,7 @@ mean(abs(delta_macro_diet) > abs(delta_brachy_diet))
 beta_brachy_d4 <- beta_brachy_good_d1 + draws$`b_logPc:density4`
 beta_macro_d4  <- beta_macro_good_d1  +
   draws$`b_logPc:density4` +
-  draws$`b_logPc:group1:density4`
+  draws$`b_logPc:morphmajor:density4`
 
 delta_brachy_d4 <- beta_brachy_d4 - beta_brachy_good_d1
 delta_macro_d4  <- beta_macro_d4  - beta_macro_good_d1
@@ -377,7 +376,7 @@ mean(abs(delta_macro_d4) > abs(delta_brachy_d4))
 beta_brachy_d8 <- beta_brachy_good_d1 + draws$`b_logPc:density8`
 beta_macro_d8  <- beta_macro_good_d1  +
   draws$`b_logPc:density8` +
-  draws$`b_logPc:group1:density8`
+  draws$`b_logPc:morphmajor:density8`
 
 delta_brachy_d8 <- beta_brachy_d8 - beta_brachy_good_d1
 delta_macro_d8  <- beta_macro_d8  - beta_macro_good_d1
