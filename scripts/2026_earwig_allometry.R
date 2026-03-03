@@ -13,6 +13,7 @@ library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(broman)
+library(cowplot)
 library(flextable)
 library(officer)
 library(knitr)
@@ -331,7 +332,7 @@ priors_morph <- c(
 # saveRDS(mod_morph, file = "mod_morph.Rds")
 
 mod_morph <- readRDS(file = "data/processed/mod_morph.Rds")
-tidy(mod_morph)
+
 draws <- as_draws_df(mod_morph)
 
 # Baseline Slopes (GOOD diet, density 1):
@@ -403,6 +404,83 @@ summ(delta_macro_diet)
 # ==============================
 
 library(patchwork)
+
+#### figure 1 ####
+
+dat.morphs.2 <- dat.morphs %>% mutate(
+  morph = case_when(
+    group == 2 ~ "minor",
+    group == 1 ~ "major",
+    group == 3 ~ "female")
+)
+
+dat.morphs.2$morph <- factor(dat.morphs.2$morph, levels=c('female', 'major', 'minor'))
+dat.morphs.2$diet <- factor(dat.morphs.2$diet, levels=c('POOR', 'GOOD'))
+library(ggrepel)
+
+
+density.labs <- c("Low", "Medium","High")
+names(density.labs) <- c("1", "4", "8")
+
+sex.labs <- c("Females", "Males")
+names(sex.labs) <- c("female", "male")
+
+forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label=id_mere,shape=interaction(morph,diet), colour=interaction(morph,diet))) +
+  geom_point(size=2,alpha=0.7) +
+  geom_hline(data = dat.morphs.2 %>% filter(sex == "male"),
+             aes(yintercept = 4.725), colour="grey", linetype="dashed") +
+  facet_grid(sex~density,labeller = labeller(density = density.labs, sex = sex.labs)) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  theme(strip.text.y = element_text(size = 14)) +
+  theme(strip.text.x = element_text(size = 14)) +
+  theme(axis.title.x = element_text(size = 16)) +
+  theme(axis.title.y = element_text(size = 16)) +
+  theme(axis.text.x = element_text(size=14)) +
+  theme(axis.text.y = element_text(size=14)) +
+  scale_y_continuous(labels = label_number(accuracy = 0.1)) +
+  scale_colour_manual("",values=c("black", "black", "black", "red", "red","black"), 
+                      labels = c(
+                        "female.POOR" = "Female - Poor",
+                        "female.GOOD" = "Female - Good",
+                        "minor.POOR" = "Brachylabic - Poor",
+                        "minor.GOOD" = "Brachylabic - Good",
+                        "major.POOR" = "Macrolabic - Poor",
+                        "major.GOOD"= "Macrolabic - Good",
+                        "old.low"="Old - Low",
+                        "old.high"="Old - High"),
+                      limits = c("female.POOR","female.GOOD","minor.POOR", "minor.GOOD", "major.POOR", "major.GOOD")) +
+  scale_shape_manual("",values=c(16,1,16,16,1,1), 
+                     labels = c(
+                       "female.POOR" = "Female - Poor",
+                       "female.GOOD" = "Female - Good",
+                       "minor.POOR" = "Brachylabic - Poor",
+                       "minor.GOOD" = "Brachylabic - Good",
+                       "major.POOR" = "Macrolabic - Poor",
+                       "major.GOOD"= "Macrolabic - Good",
+                       "old.low"="Old - Low",
+                       "old.high"="Old - High"),
+                     limits = c("female.POOR","female.GOOD","minor.POOR", "minor.GOOD", "major.POOR", "major.GOOD")) +
+  xlab("Pronotum length (mm)") +
+  ylab("Forceps length (mm)")
+
+figure_1 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
+  ggside(collapse="y") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  theme(strip.text.y = element_text(size = 14)) +
+  theme(strip.text.x = element_text(size = 14)) +
+  theme(axis.title.x = element_text(size = 16)) +
+  theme(axis.title.y = element_text(size = 16)) +
+  theme(axis.text.x = element_text(size=14)) +
+  theme(axis.text.y = element_text(size=14)) +
+  theme(strip.background = element_rect(fill="white")) +
+  theme(ggside.axis.text.x = element_blank()) +
+  theme(ggside.axis.ticks.x = element_blank())
+
+ggsave(figure_1,filename="Figure_1.jpg", width=14.83, height=8.83, dpi=800,antialias="default")
+
+#### figure 2 ####
 
 # Range of logPc
 x_seq <- seq(
@@ -526,7 +604,7 @@ figure_2 <- ggplot(plot_data,
 ggsave(figure_2, filename="figure_2.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
 
-### Slopes forect plot
+#### figure 3 ####
 
 library(posterior)
 draws_sex   <- as_draws_df(mod_sex)
@@ -668,215 +746,116 @@ figure_3 <- ggplot(slope_df,
 
 ggsave(figure_3, filename="figure_3.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
+#### figure 4 ####
+draws_sex <- as_draws_df(mod_sex)
 
-###
+# Female
+delta_f_diet <- draws_sex$`b_logPc:dietPOOR`
+delta_f_d4   <- draws_sex$`b_logPc:density4`
+delta_f_d8   <- draws_sex$`b_logPc:density8`
 
-draws_sex   <- as_draws_df(mod_sex)
-draws_morph <- as_draws_df(mod_morph)
+# Male
+delta_m_diet <- draws_sex$`b_logPc:dietPOOR` +
+  draws_sex$`b_logPc:sexmale:dietPOOR`
 
-# Baseline (GOOD d1)
-f_base <- draws_sex$b_logPc
+delta_m_d4 <- draws_sex$`b_logPc:density4` +
+  draws_sex$`b_logPc:sexmale:density4`
 
-# Diet plasticity
-f_diet <- draws_sex$b_logPc + draws_sex$`b_logPc:dietPOOR`
-delta_f_diet <- f_diet - f_base
+delta_m_d8 <- draws_sex$`b_logPc:density8` +
+  draws_sex$`b_logPc:sexmale:density8`
 
-# Density plasticity
-f_d4 <- draws_sex$b_logPc + draws_sex$`b_logPc:density4`
-f_d8 <- draws_sex$b_logPc + draws_sex$`b_logPc:density8`
-
-delta_f_d4 <- f_d4 - f_base
-delta_f_d8 <- f_d8 - f_base
-
-# Baseline
-b_base <- draws_morph$b_logPc
-
-# Diet
-b_diet <- b_base + draws_morph$`b_logPc:dietPOOR`
-delta_b_diet <- b_diet - b_base
-
-# Density
-b_d4 <- b_base + draws_morph$`b_logPc:density4`
-b_d8 <- b_base + draws_morph$`b_logPc:density8`
-
-delta_b_d4 <- b_d4 - b_base
-delta_b_d8 <- b_d8 - b_base
-
-# Baseline
-m_base <- draws_morph$b_logPc + draws_morph$`b_logPc:group1`
-
-# Diet
-m_diet <- m_base +
-  draws_morph$`b_logPc:dietPOOR` +
-  draws_morph$`b_logPc:group1:dietPOOR`
-
-delta_m_diet <- m_diet - m_base
-
-# Density
-m_d4 <- m_base +
-  draws_morph$`b_logPc:density4` +
-  draws_morph$`b_logPc:group1:density4`
-
-m_d8 <- m_base +
-  draws_morph$`b_logPc:density8` +
-  draws_morph$`b_logPc:group1:density8`
-
-delta_m_d4 <- m_d4 - m_base
-delta_m_d8 <- m_d8 - m_base
-
-summ_delta <- function(x, label, group) {
+summ <- function(x, group, env){
   data.frame(
     group = group,
-    environment = label,
+    environment = env,
     median = median(x),
-    l95 = quantile(x, .025),
-    u95 = quantile(x, .975)
+    l95 = quantile(x,.025),
+    u95 = quantile(x,.975)
   )
 }
 
-delta_df <- bind_rows(
-  
-  # Female
-  summ_delta(delta_f_diet, "POOR diet", "Female"),
-  summ_delta(delta_f_d4,   "Density 4", "Female"),
-  summ_delta(delta_f_d8,   "Density 8", "Female"),
-  
-  # Brachylabic
-  summ_delta(delta_b_diet, "POOR diet", "Brachylabic male"),
-  summ_delta(delta_b_d4,   "Density 4", "Brachylabic male"),
-  summ_delta(delta_b_d8,   "Density 8", "Brachylabic male"),
-  
-  # Macrolabic
-  summ_delta(delta_m_diet, "POOR diet", "Macrolabic male"),
-  summ_delta(delta_m_d4,   "Density 4", "Macrolabic male"),
-  summ_delta(delta_m_d8,   "Density 8", "Macrolabic male")
+delta_sex_df <- bind_rows(
+  summ(delta_f_diet,"Female","POOR diet"),
+  summ(delta_f_d4,"Female","Density 4"),
+  summ(delta_f_d8,"Female","Density 8"),
+  summ(delta_m_diet,"Male","POOR diet"),
+  summ(delta_m_d4,"Male","Density 4"),
+  summ(delta_m_d8,"Male","Density 8")
 )
 
-delta_df$group <- factor(
-  delta_df$group,
-  levels = c("Female", "Brachylabic male", "Macrolabic male")
-)
+figure_4 <- ggplot(delta_sex_df,
+       aes(x = median, y = group)) +
+  geom_vline(xintercept = 0, linetype="dashed") +
+  geom_vline(xintercept=c(-0.1,0.1),
+             linetype="dotted", colour="grey50") +
+  geom_errorbarh(aes(xmin=l95, xmax=u95),
+                 height=.15, size=.9) +
+  geom_point(size=3) +
+  facet_wrap(~environment) +
+  coord_cartesian(xlim = c(-0.85, 0.7)) +
+  labs(x=expression(Delta*beta), y=NULL) +
+  theme_classic(base_size=13) +
+  theme(strip.text=element_text(face="bold"),
+        axis.text.y=element_text(face="bold"))
 
-delta_df$environment <- factor(
-  delta_df$environment,
-  levels = c("POOR diet", "Density 4", "Density 8")
-)
+ggsave(figure_4, filename="figure_4.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
-figure_4 <- ggplot(delta_df,
-                       aes(x = median,
-                           y = environment)) +
-  
-  geom_vline(xintercept = 0,
-             linetype = "dashed",
-             size = 0.6) +
-  
-  geom_errorbarh(aes(xmin = l95, xmax = u95),
-                 height = 0.2,
-                 size = 0.7,
-                 color = "black") +
-  
-  geom_point(size = 3,
-             color = "black") +
-  
-  geom_vline(xintercept = c(-0.1, 0.1),
-             linetype = "dotted",
-             color = "grey50") +
-  
-  facet_wrap(~ group, scales = "fixed") +
-  
-  labs(
-    x = expression(paste(Delta, beta, " (Change in allometric slope)")),
-    y = NULL
-  ) +
-  
-  theme_bw(base_size = 13) +
-  theme(
-    panel.grid = element_blank(),
-    strip.background = element_rect(fill = "white"),
-    strip.text = element_text(face = "bold", size = 14),
-    axis.title.x = element_text(face = "bold", size = 14),
-    axis.text = element_text(size = 12)
+#### figure 5 ####
+draws_morph <- as_draws_df(mod_morph)
+
+# Brachylabic (reference morph)
+delta_b_diet <- draws_morph$`b_logPc:dietPOOR`
+delta_b_d4   <- draws_morph$`b_logPc:density4`
+delta_b_d8   <- draws_morph$`b_logPc:density8`
+
+# Macrolabic
+delta_M_diet <- draws_morph$`b_logPc:dietPOOR` +
+  draws_morph$`b_logPc:morphmajor:dietPOOR`
+
+delta_M_d4 <- draws_morph$`b_logPc:density4` +
+  draws_morph$`b_logPc:morphmajor:density4`
+
+delta_M_d8 <- draws_morph$`b_logPc:density8` +
+  draws_morph$`b_logPc:morphmajor:density8`
+
+summ <- function(x, group, env){
+  data.frame(
+    group = group,
+    environment = env,
+    median = median(x),
+    l95 = quantile(x,.025),
+    u95 = quantile(x,.975)
   )
+}
 
-ggsave(figure_4,
-       filename = "figure_4.jpg",
-       width = 11,
-       height = 7,
-       dpi = 300)
-
-
-### all 
-
-dat.morphs.2 <- dat.morphs %>% mutate(
-  morph = case_when(
-    group == 2 ~ "minor",
-    group == 1 ~ "major",
-    group == 3 ~ "female")
+delta_morph_df <- bind_rows(
+  summ(delta_b_diet,"Brachylabic","POOR diet"),
+  summ(delta_b_d4,"Brachylabic","Density 4"),
+  summ(delta_b_d8,"Brachylabic","Density 8"),
+  summ(delta_M_diet,"Macrolabic","POOR diet"),
+  summ(delta_M_d4,"Macrolabic","Density 4"),
+  summ(delta_M_d8,"Macrolabic","Density 8")
 )
 
-dat.morphs.2$morph <- factor(dat.morphs.2$morph, levels=c('female', 'major', 'minor'))
-dat.morphs.2$diet <- factor(dat.morphs.2$diet, levels=c('POOR', 'GOOD'))
-library(ggrepel)
+factor(group, levels = c("Macrolabic","Brachylabic"))
+
+figure_5 <- ggplot(delta_morph_df,
+       aes(x = median, y = group)) +
+  geom_vline(xintercept = 0, linetype="dashed") +
+  geom_vline(xintercept=c(-0.1,0.1),
+             linetype="dotted", colour="grey50") +
+  geom_errorbarh(aes(xmin=l95, xmax=u95),
+                 height=.15, size=.9) +
+  geom_point(size=3) +
+  facet_wrap(~environment) +
+  coord_cartesian(xlim = c(-0.7, 0.7)) +
+  labs(x=expression(Delta*beta), y=NULL) +
+  theme_classic(base_size=13) +
+  theme(strip.text=element_text(face="bold"),
+        axis.text.y=element_text(face="bold"))
+
+ggsave(figure_5, filename="figure_5.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
 
-density.labs <- c("Low", "Medium","High")
-names(density.labs) <- c("1", "4", "8")
 
-sex.labs <- c("Females", "Males")
-names(sex.labs) <- c("female", "male")
-
-forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label=id_mere,shape=interaction(morph,diet), colour=interaction(morph,diet))) +
-  geom_point(size=2,alpha=0.7) +
-  geom_hline(data = dat.morphs.2 %>% filter(sex == "male"),
-             aes(yintercept = 4.725), colour="grey", linetype="dashed") +
-  facet_grid(sex~density,labeller = labeller(density = density.labs, sex = sex.labs)) +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  theme(strip.text.y = element_text(size = 14)) +
-  theme(strip.text.x = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
-  theme(axis.text.x = element_text(size=14)) +
-  theme(axis.text.y = element_text(size=14)) +
-  scale_y_continuous(labels = label_number(accuracy = 0.1)) +
-  scale_colour_manual("",values=c("black", "black", "black", "red", "red","black"), 
-                      labels = c(
-                        "female.POOR" = "Female - Poor",
-                        "female.GOOD" = "Female - Good",
-                        "minor.POOR" = "Brachylabic - Poor",
-                        "minor.GOOD" = "Brachylabic - Good",
-                        "major.POOR" = "Macrolabic - Poor",
-                        "major.GOOD"= "Macrolabic - Good",
-                        "old.low"="Old - Low",
-                        "old.high"="Old - High"),
-                      limits = c("female.POOR","female.GOOD","minor.POOR", "minor.GOOD", "major.POOR", "major.GOOD")) +
-  scale_shape_manual("",values=c(16,1,16,16,1,1), 
-                     labels = c(
-                       "female.POOR" = "Female - Poor",
-                       "female.GOOD" = "Female - Good",
-                       "minor.POOR" = "Brachylabic - Poor",
-                       "minor.GOOD" = "Brachylabic - Good",
-                       "major.POOR" = "Macrolabic - Poor",
-                       "major.GOOD"= "Macrolabic - Good",
-                       "old.low"="Old - Low",
-                       "old.high"="Old - High"),
-                     limits = c("female.POOR","female.GOOD","minor.POOR", "minor.GOOD", "major.POOR", "major.GOOD")) +
-  xlab("Pronotum length (mm)") +
-  ylab("Forceps length (mm)")
-
-figure_1 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
-  ggside(collapse="y") +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  theme(strip.text.y = element_text(size = 14)) +
-  theme(strip.text.x = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
-  theme(axis.text.x = element_text(size=14)) +
-  theme(axis.text.y = element_text(size=14)) +
-  theme(strip.background = element_rect(fill="white")) +
-  theme(ggside.axis.text.x = element_blank()) +
-  theme(ggside.axis.ticks.x = element_blank())
-
-ggsave(figure_1,filename="Figure_1.jpg", width=14.83, height=8.83, dpi=800,antialias="default")
 
