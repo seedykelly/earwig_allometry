@@ -468,10 +468,10 @@ figure_1 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density)
   ggside(collapse="y") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  theme(strip.text.y = element_text(size = 14)) +
-  theme(strip.text.x = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
+  theme(strip.text.y = element_text(size = 14, face="bold")) +
+  theme(strip.text.x = element_text(size = 14, face="bold")) +
+  theme(axis.title.x = element_text(size = 16, face="bold")) +
+  theme(axis.title.y = element_text(size = 16, face="bold")) +
   theme(axis.text.x = element_text(size=14)) +
   theme(axis.text.y = element_text(size=14)) +
   theme(strip.background = element_rect(fill="white")) +
@@ -590,14 +590,19 @@ figure_2 <- ggplot(plot_data,
     color = "Diet",
     linetype = "Density"
   ) +
-  theme_bw(base_size = 12) +
-  theme(axis.title.x = element_text(size = 14, face="bold"),
-        axis.title.y = element_text(size = 14,face="bold"),
-        axis.text.x = element_text(size=12),
-        axis.text.y = element_text(size=12),
-    panel.grid = element_blank(),
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.text.y = element_text(size = 14, face="bold"),
+    strip.text.x = element_text(size = 14, face="bold"),
+    axis.title.x = element_text(size = 16, face="bold"),
+    axis.title.y = element_text(size = 16, face="bold"),
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
     strip.background = element_rect(fill = "white"),
-    strip.text = element_text(face = "bold", size=14),
+    ggside.axis.text.x = element_blank(),
+    ggside.axis.ticks.x = element_blank(),
     legend.position = c(0.1, 0.75)
   )
 
@@ -606,7 +611,6 @@ ggsave(figure_2, filename="figure_2.jpg", width=12.83, height=8.83, dpi=300,anti
 
 #### figure 3 ####
 
-library(posterior)
 draws_sex   <- as_draws_df(mod_sex)
 draws_morph <- as_draws_df(mod_morph)
 
@@ -734,14 +738,22 @@ figure_3 <- ggplot(slope_df,
   
   geom_hline(yintercept = 3.5, color = "grey80") +
   
-  theme_bw() +
-  theme(axis.title.x = element_text(size = 14, face="bold"),
-        axis.title.y = element_text(size = 14,face="bold"),
-        axis.text.x = element_text(size=12),
-        axis.text.y = element_text(size=12),
-    panel.grid = element_blank(),
+  theme_classic() +
+  theme(
+    panel.background = element_rect(fill = "white", colour = NA),
+    plot.background  = element_rect(fill = "white", colour = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.text.y = element_text(size = 14, face="bold"),
+    strip.text.x = element_text(size = 14, face="bold"),
+    axis.title.x = element_text(size = 16, face="bold"),
+    axis.title.y = element_text(size = 16, face="bold"),
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
     strip.background = element_rect(fill = "white"),
-    strip.text = element_text(size=14,face = "bold"),
+    ggside.axis.text.x = element_blank(),
+    ggside.axis.ticks.x = element_blank(),
+    legend.position = c(0.1, 0.75)
   )
 
 ggsave(figure_3, filename="figure_3.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
@@ -794,9 +806,23 @@ figure_4 <- ggplot(delta_sex_df,
   facet_wrap(~environment) +
   coord_cartesian(xlim = c(-0.85, 0.7)) +
   labs(x=expression(Delta*beta), y=NULL) +
-  theme_classic(base_size=13) +
-  theme(strip.text=element_text(face="bold"),
-        axis.text.y=element_text(face="bold"))
+  theme_classic() +
+  theme(
+    panel.background = element_rect(fill = "white", colour = NA),
+    plot.background  = element_rect(fill = "white", colour = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.text.y = element_text(size = 14, face="bold"),
+    strip.text.x = element_text(size = 14, face="bold"),
+    axis.title.x = element_text(size = 16, face="bold"),
+    axis.title.y = element_text(size = 16, face="bold"),
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    strip.background = element_rect(fill = "white"),
+    ggside.axis.text.x = element_blank(),
+    ggside.axis.ticks.x = element_blank(),
+    legend.position = c(0.1, 0.75)
+  )
 
 ggsave(figure_4, filename="figure_4.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
@@ -850,9 +876,23 @@ figure_5 <- ggplot(delta_morph_df,
   facet_wrap(~environment) +
   coord_cartesian(xlim = c(-0.7, 0.7)) +
   labs(x=expression(Delta*beta), y=NULL) +
-  theme_classic(base_size=13) +
-  theme(strip.text=element_text(face="bold"),
-        axis.text.y=element_text(face="bold"))
+  theme_classic() +
+  theme(
+    panel.background = element_rect(fill = "white", colour = NA),
+    plot.background  = element_rect(fill = "white", colour = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.text.y = element_text(size = 14, face="bold"),
+    strip.text.x = element_text(size = 14, face="bold"),
+    axis.title.x = element_text(size = 16, face="bold"),
+    axis.title.y = element_text(size = 16, face="bold"),
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    strip.background = element_rect(fill = "white"),
+    ggside.axis.text.x = element_blank(),
+    ggside.axis.ticks.x = element_blank(),
+    legend.position = c(0.1, 0.75)
+  )
 
 ggsave(figure_5, filename="figure_5.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 

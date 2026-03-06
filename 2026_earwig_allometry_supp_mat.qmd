@@ -1,5 +1,5 @@
 ---
-title: "Supplemental Material: Hierarchical structuring of weapon allometry and its evolutionary consequences."
+title: "Supplemental Material: Hierarchical structuring of weapon allometry in the European earwig."
 authors:
   - name: Céline Ozkan
     affiliations:
