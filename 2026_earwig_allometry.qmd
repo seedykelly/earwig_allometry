@@ -45,7 +45,7 @@ knitr::read_chunk('scripts/2026_earwig_allometry.R')
 \newpage
 
 # Abstract
-Static allometries are often regarded as stable descriptors of morphological architecture, yet scaling relationships themselves can evolve and respond plastically to environmental variation. We quantified sex-specific and morph-specific weapon allometries in the European earwig (*Forficula auricularia*) under experimental manipulation of developmental diet and density, while estimating among-family variation in intercepts and scaling exponents. Forceps length scaled positively with body size in both sexes, but males exhibited steeper allometric slopes under favourable conditions. Nutritional stress reduced male scaling exponents towards female-like values, whereas increased developmental density amplified male slopes, indicating environmentally sensitive reaction norms of scaling. Female scaling relationships remained comparatively stable across environments. In males, macrolabic and brachylabic morphs differed mainly in intercept rather than slope, indicating divergence in baseline allocation within a largely shared scaling framework. Among families, intercepts and slopes covaried positively, suggesting that evolutionary change in mean exaggeration would likely alter size-dependent exaggeration as a correlated response. These findings demonstrate that weapon allometry is hierarchically structured across sex, morph, environment, and family levels, and that scaling exponents are evolvable components of the architecture of exaggeration. Instead of reflecting fixed scaling rules, static allometries function as multilevel trait complexes whose variance structure can influence the direction and magnitude of evolutionary responses to sexual selection.
+Static allometries are often regarded as stable descriptors of morphological architecture, yet scaling relationships themselves can evolve and respond plastically to environmental variation. We quantified sex- and morph-specific weapon allometries in the European earwig (*Forficula auricularia*) under experimental manipulation of developmental diet and density, while estimating among-family variation in intercepts and scaling exponents. Forceps length scaled positively with body size in both sexes, but males exhibited steeper slopes under favourable conditions. Nutritional stress reduced male scaling exponents towards female-like values, whereas increased developmental density amplified male slopes, indicating environmentally sensitive reaction norms of scaling. Female scaling relationships remained comparatively stable across environments. In males, macrolabic and brachylabic morphs differed primarily in intercept rather than slope, suggesting divergence in baseline allocation within a shared scaling framework. Among families, intercepts and slopes covaried positively, indicating that evolutionary change in mean exaggeration would likely alter size-dependent exaggeration as a correlated response. Together, these results show that weapon allometry is structured across sex, morph, environment, and family levels, and that scaling exponents are evolvable components of exaggerated trait architecture.
 
 \newpage
 
@@ -158,7 +158,7 @@ In summary, these results support a view of static allometry as an evolvable and
 
 # Data availability
 
-Data are available through the OSF repository at 10.17605/OSF.IO/M7C53.
+Data are available through the OSF repository at https://osf.io/m7c53/overview?view_only=ce50e42b29284cbe8164e768ecb9c2b1.
 
 # Funding
 

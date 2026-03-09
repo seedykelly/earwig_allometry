@@ -409,12 +409,12 @@ library(patchwork)
 
 dat.morphs.2 <- dat.morphs %>% mutate(
   morph = case_when(
-    group == 2 ~ "minor",
-    group == 1 ~ "major",
-    group == 3 ~ "female")
+    group == "minor" ~ "brachylabic",
+    group == "major" ~ "macrolabic",
+    group == "female" ~ "female")
 )
 
-dat.morphs.2$morph <- factor(dat.morphs.2$morph, levels=c('female', 'major', 'minor'))
+dat.morphs.2$morph <- factor(dat.morphs.2$morph, levels=c('female', 'macrolabic', 'brachylabic'))
 dat.morphs.2$diet <- factor(dat.morphs.2$diet, levels=c('POOR', 'GOOD'))
 library(ggrepel)
 
@@ -443,24 +443,24 @@ forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label
                       labels = c(
                         "female.POOR" = "Female - Poor",
                         "female.GOOD" = "Female - Good",
-                        "minor.POOR" = "Brachylabic - Poor",
-                        "minor.GOOD" = "Brachylabic - Good",
-                        "major.POOR" = "Macrolabic - Poor",
-                        "major.GOOD"= "Macrolabic - Good",
+                        "brachylabic.POOR" = "Brachylabic - Poor",
+                        "brachylabic.GOOD" = "Brachylabic - Good",
+                        "macrolabic.POOR" = "Macrolabic - Poor",
+                        "macrolabic.GOOD"= "Macrolabic - Good",
                         "old.low"="Old - Low",
                         "old.high"="Old - High"),
-                      limits = c("female.POOR","female.GOOD","minor.POOR", "minor.GOOD", "major.POOR", "major.GOOD")) +
+                      limits = c("female.POOR","female.GOOD","brachylabic.POOR", "brachylabic.GOOD", "macrolabic.POOR", "macrolabic.GOOD")) +
   scale_shape_manual("",values=c(16,1,16,16,1,1), 
                      labels = c(
                        "female.POOR" = "Female - Poor",
                        "female.GOOD" = "Female - Good",
-                       "minor.POOR" = "Brachylabic - Poor",
-                       "minor.GOOD" = "Brachylabic - Good",
-                       "major.POOR" = "Macrolabic - Poor",
-                       "major.GOOD"= "Macrolabic - Good",
+                       "brachylabic.POOR" = "Brachylabic - Poor",
+                       "brachylabic.GOOD" = "Brachylabic - Good",
+                       "macrolabic.POOR" = "Macrolabic - Poor",
+                       "macrolabic.GOOD"= "Macrolabic - Good",
                        "old.low"="Old - Low",
                        "old.high"="Old - High"),
-                     limits = c("female.POOR","female.GOOD","minor.POOR", "minor.GOOD", "major.POOR", "major.GOOD")) +
+                     limits = c("female.POOR","female.GOOD","brachylabic.POOR", "brachylabic.GOOD", "macrolabic.POOR", "macrolabic.GOOD")) +
   xlab("Pronotum length (mm)") +
   ylab("Forceps length (mm)")
 
@@ -478,7 +478,7 @@ figure_1 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density)
   theme(ggside.axis.text.x = element_blank()) +
   theme(ggside.axis.ticks.x = element_blank())
 
-ggsave(figure_1,filename="Figure_1.jpg", width=14.83, height=8.83, dpi=800,antialias="default")
+ggsave(figure_1,filename="Figure_1.jpg", width=14.83, height=8.83, dpi=300,antialias="default")
 
 #### figure 2 ####
 
