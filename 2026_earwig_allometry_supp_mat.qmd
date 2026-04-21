@@ -143,7 +143,7 @@ clean_labels_morph <- function(param) {
 
   param <- str_replace(param, "^b_", "")
   param <- str_replace_all(param, "logPc", "Body size")
-  param <- str_replace_all(param, "group1", "Morph (macrolabic)")
+  param <- str_replace_all(param, "morphmajor", "Morph (macrolabic)")
   param <- str_replace_all(param, "dietPOOR", "Diet (poor)")
   param <- str_replace_all(param, "density4", "Density = 4")
   param <- str_replace_all(param, "density8", "Density = 8")

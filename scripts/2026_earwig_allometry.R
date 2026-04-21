@@ -585,10 +585,10 @@ figure_2 <- ggplot(plot_data,
                                    "4" = "dashed",
                                    "8" = "dotted")) +
   labs(
-    x = "log(Pronotum)",
-    y = "log(Forceps length)",
-    color = "Diet",
-    linetype = "Density"
+    x = "log(Pronotum length, mm)",
+    y = "log(Forceps length, mm)",
+    color = "Rearing diet",
+    linetype = "Rearing density"
   ) +
   theme_bw() +
   theme(
@@ -614,6 +614,8 @@ ggsave(figure_2, filename="figure_2.jpg", width=12.83, height=8.83, dpi=300,anti
 draws_sex   <- as_draws_df(mod_sex)
 draws_morph <- as_draws_df(mod_morph)
 
+get_variables(draws_morph)
+
 # female slopes
 female_good_d1 <- draws_sex$b_logPc
 female_poor_d1 <- draws_sex$b_logPc + draws_sex$`b_logPc:dietPOOR`
@@ -633,27 +635,39 @@ brachy_poor_d4 <- brachy_poor_d1 + draws_morph$`b_logPc:density4`
 brachy_poor_d8 <- brachy_poor_d1 + draws_morph$`b_logPc:density8`
 
 # macro slopes
-macro_good_d1 <- brachy_good_d1 + draws_morph$`b_logPc:group1`
+# GOOD
+macro_good_d1 <- draws_morph$b_logPc +
+  draws_morph$`b_logPc:morphmajor`
 
-macro_poor_d1 <- macro_good_d1 +
+macro_good_d4 <- draws_morph$b_logPc +
+  draws_morph$`b_logPc:density4` +
+  draws_morph$`b_logPc:morphmajor` +
+  draws_morph$`b_logPc:morphmajor:density4`
+
+macro_good_d8 <- draws_morph$b_logPc +
+  draws_morph$`b_logPc:density8` +
+  draws_morph$`b_logPc:morphmajor` +
+  draws_morph$`b_logPc:morphmajor:density8`
+
+# POOR
+macro_poor_d1 <- draws_morph$b_logPc +
   draws_morph$`b_logPc:dietPOOR` +
-  draws_morph$`b_logPc:group1:dietPOOR`
+  draws_morph$`b_logPc:morphmajor` +
+  draws_morph$`b_logPc:morphmajor:dietPOOR`
 
-macro_good_d4 <- macro_good_d1 +
+macro_poor_d4 <- draws_morph$b_logPc +
+  draws_morph$`b_logPc:dietPOOR` +
   draws_morph$`b_logPc:density4` +
-  draws_morph$`b_logPc:group1:density4`
+  draws_morph$`b_logPc:morphmajor` +
+  draws_morph$`b_logPc:morphmajor:dietPOOR` +
+  draws_morph$`b_logPc:morphmajor:density4`
 
-macro_good_d8 <- macro_good_d1 +
+macro_poor_d8 <- draws_morph$b_logPc +
+  draws_morph$`b_logPc:dietPOOR` +
   draws_morph$`b_logPc:density8` +
-  draws_morph$`b_logPc:group1:density8`
-
-macro_poor_d4 <- macro_poor_d1 +
-  draws_morph$`b_logPc:density4` +
-  draws_morph$`b_logPc:group1:density4`
-
-macro_poor_d8 <- macro_poor_d1 +
-  draws_morph$`b_logPc:density8` +
-  draws_morph$`b_logPc:group1:density8`
+  draws_morph$`b_logPc:morphmajor` +
+  draws_morph$`b_logPc:morphmajor:dietPOOR` +
+  draws_morph$`b_logPc:morphmajor:density8`
 
 summ <- function(x, label, group) {
   data.frame(
@@ -707,53 +721,58 @@ slope_df$group <- factor(
   levels = c("Female", "Brachylabic male", "Macrolabic male")
 ) 
 
+slope_df <- slope_df %>%
+  mutate(
+    diet = ifelse(str_detect(treatment, "GOOD"), "GOOD", "POOR"),
+    diet = recode(diet,
+                     "POOR" = "Poor",
+                     "GOOD" = "Good"),
+    density = str_extract(treatment, "d[0-9]+"),
+    density = recode(density,
+                     "d1" = "Low",
+                     "d4" = "Medium",
+                     "d8" = "High"),
+    density = factor(density, levels = c("Low", "Medium", "High"))
+  ) 
+
 
 figure_3 <- ggplot(slope_df,
-       aes(x = median,
-           y = treatment)) +
+                   aes(x = median,
+                       y = density,
+                       shape = diet)) +
   
-  # vertical reference line at 0
   geom_vline(xintercept = 0,
              linetype = "dotted",
              size = 0.6) +
   
-  # credible intervals
   geom_errorbarh(aes(xmin = l95, xmax = u95),
                  height = 0.2,
                  size = 0.6,
-                 color = "black") +
+                 color = "black",
+                 position = position_dodge(width = 0.5)) +
   
-  # posterior medians
   geom_point(size = 2.5,
-             color = "black") +
+             color = "black",
+             position = position_dodge(width = 0.5)) +
   
-  facet_wrap(~ group, scales = "fixed") +
-  
-  scale_y_discrete(limits = rev) +
+  facet_wrap(~ group, nrow = 1) +
   
   labs(
     x = expression(paste("Allometric slope (", beta, ")")),
-    y = NULL
+    y = "Rearing density",
+    shape = "Diet"
   ) +
-  
-  geom_hline(yintercept = 3.5, color = "grey80") +
-  
   theme_classic() +
   theme(
-    panel.background = element_rect(fill = "white", colour = NA),
-    plot.background  = element_rect(fill = "white", colour = NA),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    strip.text.y = element_text(size = 14, face="bold"),
-    strip.text.x = element_text(size = 14, face="bold"),
-    axis.title.x = element_text(size = 16, face="bold"),
-    axis.title.y = element_text(size = 16, face="bold"),
-    axis.text.x = element_text(size = 14),
-    axis.text.y = element_text(size = 14),
-    strip.background = element_rect(fill = "white"),
-    ggside.axis.text.x = element_blank(),
-    ggside.axis.ticks.x = element_blank(),
-    legend.position = c(0.1, 0.75)
+    panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+    axis.line = element_line(colour = "black", linewidth = 0.8),
+    
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.title.x = element_text(size = 16, face = "bold"),
+    axis.title.y = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14),
+    
+    legend.position = "right"
   )
 
 ggsave(figure_3, filename="figure_3.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
