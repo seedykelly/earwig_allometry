@@ -194,14 +194,3 @@ We thank Andreanne Nault for her help in the lab.
 ![](figure_3.jpg)
 :::
 
-\newpage
-
-::: {#fig-four fig-cap="Posterior medians (points) and 95% credible intervals (horizontal bars) show changes in the allometric slope (Δβ) of log forceps length on log pronotum width relative to the baseline condition (good diet, low density). The vertical dashed line indicates no change in slope, and the dotted lines denote a biologically meaningful threshold of |Δβ| = 0.1. Females show little evidence of slope plasticity across environments. In contrast, males exhibit pronounced environmental sensitivity, with strong reductions in the scaling exponent under poor diet and substantial increases at elevated densities. Estimates are derived from the sex-specific multilevel model including sex × environment × body size interactions."}
-![](figure_4.jpg)
-:::
-
-\newpage
-
-::: {#fig-five fig-cap="Posterior medians and 95% credible intervals show changes in the allometric slope (Δβ) relative to brachylabic males under good diet and low density. The vertical dashed line indicates no change in slope; dotted lines denote |Δβ| = 0.1. Both morphs show environmentally induced variation in slope, but the broad overlap of credible intervals provides limited evidence for strong morph-specific divergence in scaling plasticity. Morph differentiation in weapon exaggeration therefore reflects primarily intercept shifts rather than fundamentally distinct scaling exponents. Estimates are derived from the male-only multilevel model including morph × environment × body size interactions."}
-![](figure_5.jpg)
-:::
