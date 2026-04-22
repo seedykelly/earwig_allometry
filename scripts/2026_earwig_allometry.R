@@ -111,8 +111,9 @@ load(file ="data/processed/dat.morphs.Rda")
 # dat.morphs <- dat.morphs %>%
 #   mutate(group=replace(group, id=="DJODI", "2"))
 # # 
-# # earwig_data_complete %>%
-# #   filter(id=="DJODI")
+dat.morphs %>%
+  filter(morph=="CCNJO")
+
 # # earwig_data_complete %>%
 # #   filter(id_mere=="MNLDO")
 # 
@@ -405,7 +406,7 @@ summ(delta_macro_diet)
 
 library(patchwork)
 
-#### figure 1 ####
+#### figure 2 ####
 
 dat.morphs.2 <- dat.morphs %>% mutate(
   morph = case_when(
@@ -464,7 +465,7 @@ forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label
   xlab("Pronotum length (mm)") +
   ylab("Forceps length (mm)")
 
-figure_1 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
+figure_2 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
   ggside(collapse="y") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
@@ -478,18 +479,38 @@ figure_1 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density)
   theme(ggside.axis.text.x = element_blank()) +
   theme(ggside.axis.ticks.x = element_blank())
 
-ggsave(figure_1,filename="Figure_1.jpg", width=14.83, height=8.83, dpi=300,antialias="default")
+ggsave(figure_2,filename="Figure_2.jpg", width=14.83, height=8.83, dpi=300,antialias="default")
 
-#### figure 2 ####
+#### figure 3 ####
+getRversion()
+library(brms)
+library(dplyr)
+library(ggplot2)
 
-# Range of logPc
+# -----------------------------
+# 1. CLEAN + PREP DATA
+# -----------------------------
+
+# Ensure morph is a factor with correct levels
+dat.morphs$morph <- factor(dat.morphs$morph,
+                           levels = c("minor", "major"))
+
+# Remove any bad values just in case
+dat.morphs <- dat.morphs %>%
+  filter(is.finite(logPc), is.finite(logF))
+
+# -----------------------------
+# 2. SEQUENCE FOR PREDICTION
+# -----------------------------
 x_seq <- seq(
-  min(dat.morphs$logPc, na.rm = TRUE),
-  max(dat.morphs$logPc, na.rm = TRUE),
+  min(dat.morphs$logPc),
+  max(dat.morphs$logPc),
   length.out = 100
 )
 
-# Grid for females (from sex model)
+# -----------------------------
+# 3. NEW DATA: FEMALES
+# -----------------------------
 new_female <- expand.grid(
   logPc   = x_seq,
   sex     = "female",
@@ -498,43 +519,60 @@ new_female <- expand.grid(
   id_mere = NA
 )
 
-# Grid for males (from morph model)
+# Match factor structure
+new_female$sex     <- factor(new_female$sex, levels = levels(dat.morphs$sex))
+new_female$diet    <- factor(new_female$diet, levels = levels(dat.morphs$diet))
+new_female$density <- factor(new_female$density, levels = levels(dat.morphs$density))
+
+# -----------------------------
+# 4. NEW DATA: MALES
+# -----------------------------
 new_male <- expand.grid(
   logPc   = x_seq,
-  group   = c("1","2"),   # 1=macro, 2=brachy
+  morph   = c("minor", "major"),
   diet    = c("GOOD", "POOR"),
   density = c("1", "4", "8"),
   id_mere = NA
 )
 
-# Females from sex model
+# Match factor structure
+new_male$morph   <- factor(new_male$morph, levels = levels(dat.morphs$morph))
+new_male$diet    <- factor(new_male$diet, levels = levels(dat.morphs$diet))
+new_male$density <- factor(new_male$density, levels = levels(dat.morphs$density))
+
+# -----------------------------
+# 5. MODEL PREDICTIONS
+# -----------------------------
 epred_female <- posterior_epred(
   mod_sex,
   newdata = new_female,
-  re_formula = NA   # exclude random effects
+  re_formula = NA
 )
 
-# Males from morph model
 epred_male <- posterior_epred(
   mod_morph,
   newdata = new_male,
   re_formula = NA
 )
 
-# Female summaries
-female_summary <- apply(epred_female, 2, median)
+# -----------------------------
+# 6. SUMMARISE (MEDIAN)
+# -----------------------------
+new_female$fit <- apply(epred_female, 2, median)
+new_male$fit   <- apply(epred_male, 2, median)
 
-new_female$fit <- female_summary
+# -----------------------------
+# 7. PANEL LABELS
+# -----------------------------
 new_female$panel <- "Female"
 
-# Male summaries
-male_summary <- apply(epred_male, 2, median)
-
-new_male$fit <- male_summary
-new_male$panel <- ifelse(new_male$group == "1",
+new_male$panel <- ifelse(new_male$morph == "major",
                          "Macrolabic male",
                          "Brachylabic male")
 
+# -----------------------------
+# 8. COMBINE FOR PLOTTING
+# -----------------------------
 plot_data <- bind_rows(
   new_female %>% select(logPc, diet, density, fit, panel),
   new_male %>% select(logPc, diet, density, fit, panel)
@@ -542,33 +580,37 @@ plot_data <- bind_rows(
 
 plot_data$panel <- factor(
   plot_data$panel,
-  levels = c(
-    "Female",
-    "Brachylabic male",
-    "Macrolabic male"
-  )
+  levels = c("Female", "Brachylabic male", "Macrolabic male")
 )
 
+# -----------------------------
+# 9. RAW DATA (POINTS)
+# -----------------------------
 raw_data <- dat.morphs %>%
   mutate(
     panel = case_when(
       sex == "female" ~ "Female",
-      sex == "male" & group == "2" ~ "Brachylabic male",
-      sex == "male" & group == "1" ~ "Macrolabic male"
+      sex == "male" & morph == "minor" ~ "Brachylabic male",
+      sex == "male" & morph == "major" ~ "Macrolabic male"
     )
   )
 
 raw_data$panel <- factor(
   raw_data$panel,
   levels = c("Female", "Brachylabic male", "Macrolabic male")
-) 
+)
 
-figure_2 <- ggplot(plot_data,
-       aes(x = logPc,
-           y = fit,
-           color = diet,
-           linetype = density,
-           group = interaction(diet, density))) +
+# -----------------------------
+# 10. FINAL PLOT
+# -----------------------------
+figure_3 <- ggplot(plot_data,
+                   aes(x = logPc,
+                       y = fit,
+                       color = diet,
+                       linetype = density,
+                       group = interaction(diet, density))) +
+  
+  # raw data
   geom_point(
     data = raw_data,
     aes(x = logPc, y = logF),
@@ -576,45 +618,50 @@ figure_2 <- ggplot(plot_data,
     color = "black",
     alpha = 0.08,
     size = 0.7
-  ) + 
-  geom_line(size = 1.2) +
+  ) +
+  
+  # model predictions
+  geom_line(linewidth = 1.2) +
+  
   facet_wrap(~ panel, nrow = 1, scales = "fixed") +
-  scale_color_manual(values = c("GOOD" = "#D55E00",
-                                "POOR" = "#0072B2")) +
-  scale_linetype_manual(values = c("1" = "solid",
-                                   "4" = "dashed",
-                                   "8" = "dotted")) +
+  
+  scale_color_manual(values = c(
+    "GOOD" = "#D55E00",
+    "POOR" = "#0072B2"
+  )) +
+  
+  scale_linetype_manual(values = c(
+    "1" = "solid",
+    "4" = "dashed",
+    "8" = "dotted"
+  )) +
+  
   labs(
     x = "log(Pronotum length, mm)",
     y = "log(Forceps length, mm)",
     color = "Rearing diet",
     linetype = "Rearing density"
   ) +
+  
   theme_bw() +
   theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    strip.text.y = element_text(size = 14, face="bold"),
-    strip.text.x = element_text(size = 14, face="bold"),
-    axis.title.x = element_text(size = 16, face="bold"),
-    axis.title.y = element_text(size = 16, face="bold"),
-    axis.text.x = element_text(size = 14),
-    axis.text.y = element_text(size = 14),
+    panel.grid = element_blank(),
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14),
     strip.background = element_rect(fill = "white"),
-    ggside.axis.text.x = element_blank(),
-    ggside.axis.ticks.x = element_blank(),
     legend.position = c(0.1, 0.75)
   )
 
-ggsave(figure_2, filename="figure_2.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
+
+figure_3
+ggsave(figure_3, filename="figure_3.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
 
-#### figure 3 ####
+#### figure 4 ####
 
 draws_sex   <- as_draws_df(mod_sex)
 draws_morph <- as_draws_df(mod_morph)
-
-get_variables(draws_morph)
 
 # female slopes
 female_good_d1 <- draws_sex$b_logPc
@@ -736,7 +783,7 @@ slope_df <- slope_df %>%
   ) 
 
 
-figure_3 <- ggplot(slope_df,
+figure_4 <- ggplot(slope_df,
                    aes(x = median,
                        y = density,
                        shape = diet)) +
@@ -775,7 +822,7 @@ figure_3 <- ggplot(slope_df,
     legend.position = "right"
   )
 
-ggsave(figure_3, filename="figure_3.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
+ggsave(figure_4, filename="figure_4.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
 
 #### figure 4 ####
 draws_sex <- as_draws_df(mod_sex)
