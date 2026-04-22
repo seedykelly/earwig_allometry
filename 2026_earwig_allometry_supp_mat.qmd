@@ -42,6 +42,146 @@ knitr::read_chunk('scripts/2026_earwig_allometry.R')
 
 \newpage
 
+We modelled log-transformed forceps length as a Gaussian response with identity link. Fixed effects included all lower-order terms implied by interactions between body size (log pronotum width), sex or male morph, diet, and density. Maternal identity was included as a varying intercept and slope (on log body size), allowing both mean trait size and allometric slope to vary among families.
+
+## Statistical models
+
+### Sex difference model
+
+We modelled log-transformed forceps length as:
+
+$$
+\log F_{ij} \sim \mathcal{N}(\mu_{ij}, \sigma)
+$$
+
+with linear predictor:
+
+$$
+\begin{aligned}
+\mu_{ij} =
+&\ \beta_0 
++ \beta_1 \log P_{C,ij}
++ \beta_2 \text{sex}_{ij}
++ \beta_3 \text{diet}_{ij}
++ \beta_4 \text{density}_{ij} \\
+&+ \beta_5 (\log P_{C,ij} \times \text{sex}_{ij})
++ \beta_6 (\log P_{C,ij} \times \text{diet}_{ij})
++ \beta_7 (\log P_{C,ij} \times \text{density}_{ij}) \\
+&+ \beta_8 (\text{sex}_{ij} \times \text{diet}_{ij})
++ \beta_9 (\text{sex}_{ij} \times \text{density}_{ij}) \\
+&+ \beta_{10} (\log P_{C,ij} \times \text{sex}_{ij} \times \text{diet}_{ij})
++ \beta_{11} (\log P_{C,ij} \times \text{sex}_{ij} \times \text{density}_{ij}) \\
+&+ b_{0j} + b_{1j} \log P_{C,ij}
+\end{aligned}
+$$
+
+Random effects (maternal identity):
+
+$$
+\begin{pmatrix}
+b_{0j} \\
+b_{1j}
+\end{pmatrix}
+\sim \mathcal{N}
+\left(
+\begin{pmatrix}
+0 \\
+0
+\end{pmatrix},
+\mathbf{\Sigma}
+\right)
+$$
+
+$$
+\mathbf{\Sigma} =
+\begin{pmatrix}
+\sigma^2_{0} & \rho\,\sigma_{0}\sigma_{1} \\
+\rho\,\sigma_{0}\sigma_{1} & \sigma^2_{1}
+\end{pmatrix}
+$$
+
+Priors:
+
+$$
+\beta_k \sim \mathcal{N}(0, 1), \quad
+\beta_0 \sim \mathcal{N}(0, 2)
+$$
+
+$$
+\sigma \sim t^+_3(0, 1), \quad
+\sigma_0, \sigma_1 \sim t^+_3(0, 1)
+$$
+
+$$
+\rho \sim \text{LKJ}(2)
+$$
+
+
+---
+
+### Male morph model
+
+We modelled log-transformed forceps length as:
+
+$$
+\log F_{ij} \sim \mathcal{N}(\mu_{ij}, \sigma)
+$$
+
+with linear predictor:
+
+$$
+\begin{aligned}
+\mu_{ij} =
+&\ \beta_0 
++ \beta_1 \log P_{C,ij}
++ \beta_2 \text{morph}_{ij}
++ \beta_3 \text{diet}_{ij}
++ \beta_4 \text{density}_{ij} \\
+&+ \beta_5 (\log P_{C,ij} \times \text{morph}_{ij})
++ \beta_6 (\log P_{C,ij} \times \text{diet}_{ij})
++ \beta_7 (\log P_{C,ij} \times \text{density}_{ij}) \\
+&+ \beta_8 (\text{morph}_{ij} \times \text{diet}_{ij})
++ \beta_9 (\text{morph}_{ij} \times \text{density}_{ij}) \\
+&+ \beta_{10} (\log P_{C,ij} \times \text{morph}_{ij} \times \text{diet}_{ij})
++ \beta_{11} (\log P_{C,ij} \times \text{morph}_{ij} \times \text{density}_{ij}) \\
+&+ b_{0j} + b_{1j} \log P_{C,ij}
+\end{aligned}
+$$
+
+Random effects:
+
+$$
+\begin{pmatrix}
+b_{0j} \\
+b_{1j}
+\end{pmatrix}
+\sim \mathcal{N}
+\left(
+\begin{pmatrix}
+0 \\
+0
+\end{pmatrix},
+\mathbf{\Sigma}
+\right)
+$$
+
+Priors:
+
+$$
+\beta_k \sim \mathcal{N}(0, 0.5), \quad
+\beta_0 \sim \mathcal{N}(1.2, 0.5)
+$$
+
+$$
+\sigma \sim t^+_3(0, 0.5), \quad
+\sigma_0, \sigma_1 \sim t^+_3(0, 0.3)
+$$
+
+$$
+\rho \sim \text{LKJ}(2)
+$$
+
+\newpage
 
 **Table S1.** Posterior summaries from the Bayesian sex-specific allometry model. The model estimated Gaussian regression of log forceps length including body size (logPc), sex, diet, density, and their interactions, with varying intercepts and slopes for mother identity (id_mere). Reported values are posterior medians and 95% credible intervals (CrI).
 ```{r}

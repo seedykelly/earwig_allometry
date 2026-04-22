@@ -128,7 +128,6 @@ dat.morphs <- dat.morphs %>%
   mutate(
     logF  = log(forceps_L),
     logP  = log(pronotum),
-    logPc = scale(logP, scale = FALSE)[,1],  # mean center
     sex   = factor(sex),
     group = factor(morph),
     diet  = factor(diet),
@@ -158,9 +157,8 @@ summary.table.2 <- dat.morphs %>%
 
 # sex difference
 formula_sex <- bf(
-  logF ~ logPc * sex * diet +
-    logPc * sex * density +
-    (1 + logPc | id_mere)
+  logF ~ logP * sex * diet * density +
+    (1 + logP | id_mere)
 )
 
 priors_sex <- c(
@@ -181,112 +179,36 @@ priors_sex <- c(
   prior(lkj(2), class = "cor")
 )
 
-# mod_sex <- brm(
-#   formula = formula_sex,
-#   data    = dat.morphs,
-#   family  = gaussian(),
-#   prior   = priors_sex,
-#   chains  = 4,
-#   cores   = 4,
-#   iter    = 4000,
-#   backend = "cmdstanr",
-#      file = "data/processed/mod_sex.Rds",
-#   control = list(adapt_delta = 0.97)
-# )
+mod_sex <- brm(
+  formula = formula_sex,
+  data    = dat.morphs,
+  family  = gaussian(),
+  prior   = priors_sex,
+  chains  = 4,
+  cores   = 4,
+  iter    = 4000,
+  backend = "cmdstanr",
+     file = "data/processed/mod_sex.Rds",
+  control = list(adapt_delta = 0.97)
+)
 
-# saveRDS(mod_sex, file = "mod_sex.Rds")
+saveRDS(mod_sex, file = "mod_sex.Rds")
 mod_sex <- readRDS(file = "data/processed/mod_sex.Rds")
 
-#### Compute Posterior Slopes per Sex × Environment
-
-# Slopes for all combinations
 slopes_sex <- emtrends(
   mod_sex,
   ~ sex * diet * density,
-  var = "logPc"
+  var = "logP"
 )
 
 summary(slopes_sex)
-slopes_draws <- as.data.frame(slopes_sex)
 
-#### Posterior Probability Male Slope > Female Slope
 male_vs_female <- pairs(
-  emtrends(mod_sex, ~ sex | diet * density, var = "logPc")
+  emtrends(mod_sex, ~ sex | diet * density, var = "logP")
 )
 
 summary(male_vs_female)
 
-# Extract posterior draws
-draws <- as_draws_df(mod_sex)
-
-# Female slope baseline
-beta_female_base <- draws$b_logPc
-
-# Male slope baseline
-beta_male_base <- draws$b_logPc + draws$`b_logPc:sexmale`
-
-# Posterior probability male > female (GOOD, density1)
-mean(beta_male_base > beta_female_base)
-
-#### Probability Male Slope Changes Under Poor Diet
-beta_male_good <- draws$b_logPc + draws$`b_logPc:sexmale`
-
-beta_male_poor <- beta_male_good +
-  draws$`b_logPc:sexmale:dietPOOR`
-
-mean(beta_male_poor < beta_male_good)
-
-delta_male_diet <- beta_male_poor - beta_male_good
-mean(abs(delta_male_diet) > 0.1)
-
-#### Probability Female Slope Changes Under Poor Diet
-beta_female_good <- draws$b_logPc
-beta_female_poor <- draws$b_logPc + draws$`b_logPc:dietPOOR`
-
-delta_female_diet <- beta_female_poor - beta_female_good
-mean(delta_female_diet > 0)
-mean(delta_female_diet < 0)
-
-quantile(delta_female_diet, c(.025, .5, .975))
-mean(abs(delta_female_diet) > 0.1)
-
-#### Full Table of Posterior Slopes
-# Female slopes
-female_good_d1 <- draws$b_logPc
-female_poor_d1 <- draws$b_logPc + draws$`b_logPc:dietPOOR`
-female_good_d4 <- draws$b_logPc + draws$`b_logPc:density4`
-female_good_d8 <- draws$b_logPc + draws$`b_logPc:density8`
-
-quantile(female_good_d1, probs = c(.025, .5, .975))
-quantile(female_poor_d1, probs = c(.025, .5, .975))
-quantile(female_good_d4, probs = c(.025, .5, .975))
-quantile(female_good_d8, probs = c(.025, .5, .975))
-
-# Male slopes
-male_good_d1 <- draws$b_logPc + draws$`b_logPc:sexmale`
-male_poor_d1 <- male_good_d1 + draws$`b_logPc:sexmale:dietPOOR`
-male_good_d4 <- male_good_d1 + draws$`b_logPc:sexmale:density4`
-male_good_d8 <- male_good_d1 + draws$`b_logPc:sexmale:density8`
-
-quantile(male_good_d1, probs = c(.025, .5, .975))
-quantile(male_poor_d1, probs = c(.025, .5, .975))
-quantile(male_good_d4, probs = c(.025, .5, .975))
-quantile(male_good_d8, probs = c(.025, .5, .975))
-
-mean(abs(delta_male_diet) > abs(delta_female_diet))
-
-## density
-delta_male_density4  <- male_good_d4 - male_good_d1
-delta_male_density8  <- male_good_d8 - male_good_d1
-
-mean(abs(delta_male_density4) > 0.1)
-mean(abs(delta_male_density8) > 0.1)
-
-delta_female_density4  <- female_good_d4 - female_good_d1
-delta_female_density8  <- female_good_d8 - female_good_d1
-
-mean(abs(delta_female_density4) > 0.1)
-mean(abs(delta_female_density8) > 0.1)
 
 ### MALES ONLY
 males <- subset(dat.morphs, sex == "male")
@@ -294,7 +216,7 @@ males$morph <- factor(males$morph)
 males$morph <- relevel(males$morph, ref = "minor")  # brachylabic as reference
 
 formula_morph <- bf(
-  logF ~ logPc * morph * diet +
+  logF ~ logP * morph * diet +
     logPc * morph * density +
     (1 + logPc | id_mere)
 )
@@ -317,20 +239,20 @@ priors_morph <- c(
   prior(lkj(2), class = "cor")
 )
 
-# mod_morph <- brm(
-#   formula = formula_morph,
-#   data    = males,
-#   family  = gaussian(),
-#   prior   = priors_morph,
-#   backend = "cmdstanr",
-#   chains  = 4,
-#   cores   = 4,
-#   iter    = 4000,
-#   file = "data/processed/mod_morph.Rds",
-#   control = list(adapt_delta = 0.97)
-# )
-# 
-# saveRDS(mod_morph, file = "mod_morph.Rds")
+mod_morph <- brm(
+  formula = formula_morph,
+  data    = males,
+  family  = gaussian(),
+  prior   = priors_morph,
+  backend = "cmdstanr",
+  chains  = 4,
+  cores   = 4,
+  iter    = 4000,
+  file = "data/processed/mod_morph.Rds",
+  control = list(adapt_delta = 0.97)
+)
+
+saveRDS(mod_morph, file = "mod_morph.Rds")
 
 mod_morph <- readRDS(file = "data/processed/mod_morph.Rds")
 
@@ -338,16 +260,16 @@ draws <- as_draws_df(mod_morph)
 
 # Baseline Slopes (GOOD diet, density 1):
 # Do macrolabic and brachylabic males differ in their allometric slope under the reference environmental conditions?
-beta_brachy_good_d1 <- draws$b_logPc
+beta_brachy_good_d1 <- draws$b_logP
 
-beta_macro_good_d1 <- draws$b_logPc + draws$`b_logPc:morphmajor`
+beta_macro_good_d1 <- draws$b_logP + draws$`b_logP:morphmajor`
 delta_baseline <- beta_macro_good_d1 - beta_brachy_good_d1
 
 mean(delta_baseline > 0)
 quantile(delta_baseline, c(.025, .5, .975)) # baseline slopes are not different
 
 # Diet Slope Plasticity Within Each Morph
-beta_brachy_poor_d1 <- beta_brachy_good_d1 + draws$`b_logPc:dietPOOR`
+beta_brachy_poor_d1 <- beta_brachy_good_d1 + draws$`b_logP:dietPOOR`
 beta_macro_poor_d1 <- beta_macro_good_d1 +
   draws$`b_logPc:dietPOOR` +
   draws$`b_logPc:morphmajor:dietPOOR`
@@ -364,7 +286,7 @@ mean(abs(delta_macro_diet) > abs(delta_brachy_diet))
 
 # Density slope plasticity
 # density 4
-beta_brachy_d4 <- beta_brachy_good_d1 + draws$`b_logPc:density4`
+beta_brachy_d4 <- beta_brachy_good_d1 + draws$`b_logP:density4`
 beta_macro_d4  <- beta_macro_good_d1  +
   draws$`b_logPc:density4` +
   draws$`b_logPc:morphmajor:density4`
@@ -375,9 +297,9 @@ delta_macro_d4  <- beta_macro_d4  - beta_macro_good_d1
 mean(abs(delta_macro_d4) > abs(delta_brachy_d4))
 
 # Density 8
-beta_brachy_d8 <- beta_brachy_good_d1 + draws$`b_logPc:density8`
+beta_brachy_d8 <- beta_brachy_good_d1 + draws$`b_logP:density8`
 beta_macro_d8  <- beta_macro_good_d1  +
-  draws$`b_logPc:density8` +
+  draws$`b_logP:density8` +
   draws$`b_logPc:morphmajor:density8`
 
 delta_brachy_d8 <- beta_brachy_d8 - beta_brachy_good_d1

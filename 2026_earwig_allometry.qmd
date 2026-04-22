@@ -186,13 +186,13 @@ We thank Andreanne Nault for her help in the lab.
 ![](figure_2.jpg)
 :::
 
-::: {#fig-three fig-cap="Predicted population-level relationships between log-transformed forceps length and log-transformed pronotum width across diet (GOOD vs POOR) and rearing density (1, 4, or 8 individuals per container). Panels show females (left), brachylabic males (center), and macrolabic males (right). Solid, dashed, and dotted lines correspond to density treatments; color indicates diet. Fitted lines represent posterior medians from Bayesian multilevel models excluding random family effects; grey points show raw data. Female slopes are relatively stable across environments, whereas male slopes exhibit pronounced environmental sensitivity. Morph divergence in males is primarily intercept-based, with macrolabic males exhibiting consistently larger forceps at a given body size and stronger slope reductions under poor diet."}
+::: {#fig-three fig-cap="Predicted relationships between body size (log pronotum length, mm) and forceps length (mm) across sexes and male morphs. Lines show posterior median predictions from a unified Bayesian model. Points represent raw data."}
 ![](figure_3.jpg)
 :::
 
 \newpage
 
-::: {#fig-four fig-cap="Points represent posterior medians and horizontal bars indicate 95% credible intervals for slopes relating log forceps length to log pronotum width. Treatments are grouped by diet (good vs. poor) and density (low, medium, or high). The vertical dotted line indicates a slope of zero. Female slopes cluster tightly and show little environmental sensitivity. In contrast, male slopes vary substantially across environments, with macrolabic males showing a higher posterior probability of substantial slope reduction under poor diet than brachylabic males. These estimates are derived from Bayesian multilevel models that incorporate among-family variance."}
+::: {#fig-four fig-cap="Posterior estimates of allometric slopes (β) across sexes and male morphs under different environmental conditions. Points show posterior medians and horizontal bars indicate 95% credible intervals from a unified Bayesian model."}
 ![](figure_4.jpg)
 :::
 
