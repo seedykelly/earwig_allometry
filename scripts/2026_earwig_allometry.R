@@ -30,6 +30,8 @@ library(ggside)
 library(posterior)
 library(emmeans)
 
+# packageVersion("mixsmsn")
+
 earwig_data_raw <- read.csv(file="data/raw/earwig_allometry.csv", header=TRUE, sep=",", dec=".") %>%
   as.data.frame()
 
@@ -123,6 +125,10 @@ dat.morphs %>%
 # Allometry
 # ============================
 
+# ============================
+# sex difference
+# ============================
+
 # Transform variables
 dat.morphs <- dat.morphs %>%
   mutate(
@@ -179,21 +185,23 @@ priors_sex <- c(
   prior(lkj(2), class = "cor")
 )
 
-mod_sex <- brm(
-  formula = formula_sex,
-  data    = dat.morphs,
-  family  = gaussian(),
-  prior   = priors_sex,
-  chains  = 4,
-  cores   = 4,
-  iter    = 4000,
-  backend = "cmdstanr",
-     file = "data/processed/mod_sex.Rds",
-  control = list(adapt_delta = 0.97)
-)
+# mod_sex <- brm(
+#   formula = formula_sex,
+#   data    = dat.morphs,
+#   family  = gaussian(),
+#   prior   = priors_sex,
+#   chains  = 4,
+#   cores   = 4,
+#   iter    = 4000,
+#   backend = "cmdstanr",
+#      file = "data/processed/mod_sex.Rds",
+#   control = list(adapt_delta = 0.97)
+# )
 
-saveRDS(mod_sex, file = "mod_sex.Rds")
+#saveRDS(mod_sex, file = "mod_sex.Rds")
 mod_sex <- readRDS(file = "data/processed/mod_sex.Rds")
+
+print(tidy(mod_sex), n = "all")
 
 slopes_sex <- emtrends(
   mod_sex,
@@ -210,7 +218,39 @@ male_vs_female <- pairs(
 summary(male_vs_female)
 
 
-### MALES ONLY
+# =============================
+# test for non-linearity
+# =============================
+
+formula_sex_quad <- bf(
+  logF ~ logP * sex * diet * density +
+    I(logP^2) * sex * diet * density +
+    (1 + logP | id_mere)
+)
+
+# mod_sex_quad <- brm(
+#   formula = formula_sex_quad,
+#   data    = dat.morphs,
+#   family  = gaussian(),
+#   prior   = priors_sex,
+#   chains  = 4,
+#   cores   = 4,
+#   iter    = 4000,
+#   backend = "cmdstanr",
+#   file    = "data/processed/mod_sex_quad.Rds",
+#   control = list(adapt_delta = 0.97)
+# )
+
+mod_sex_quad <- readRDS(file = "data/processed/mod_sex_quad.Rds")
+
+summary(mod_sex_quad)
+
+loo.comp <- loo(mod_sex, mod_sex_quad)
+
+
+# ============================
+# males only
+# ============================
 males <- subset(dat.morphs, sex == "male")
 males$morph <- factor(males$morph)
 males$morph <- relevel(males$morph, ref = "minor")  # brachylabic as reference
@@ -238,22 +278,24 @@ priors_morph <- c(
   prior(lkj(2), class = "cor")
 )
 
-mod_morph <- brm(
-  formula = formula_morph,
-  data    = males,
-  family  = gaussian(),
-  prior   = priors_morph,
-  backend = "cmdstanr",
-  chains  = 4,
-  cores   = 4,
-  iter    = 4000,
-  file    = "data/processed/mod_morph.Rds",
-  control = list(adapt_delta = 0.97)
-)
+# mod_morph <- brm(
+#   formula = formula_morph,
+#   data    = males,
+#   family  = gaussian(),
+#   prior   = priors_morph,
+#   backend = "cmdstanr",
+#   chains  = 4,
+#   cores   = 4,
+#   iter    = 4000,
+#   file    = "data/processed/mod_morph.Rds",
+#   control = list(adapt_delta = 0.97)
+# )
 
-saveRDS(mod_morph, file = "mod_morph.Rds")
+# saveRDS(mod_morph, file = "mod_morph.Rds")
 
 mod_morph <- readRDS(file = "data/processed/mod_morph.Rds")
+
+print(tidy(mod_morph), n = "all")
 
 draws <- as_draws_df(mod_morph)
 
@@ -323,25 +365,21 @@ forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label
   scale_y_continuous(labels = label_number(accuracy = 0.1)) +
   scale_colour_manual("",values=c("black", "black", "black", "red", "red","black"), 
                       labels = c(
-                        "female.POOR" = "Female - Poor",
-                        "female.GOOD" = "Female - Good",
-                        "brachylabic.POOR" = "Brachylabic - Poor",
-                        "brachylabic.GOOD" = "Brachylabic - Good",
-                        "macrolabic.POOR" = "Macrolabic - Poor",
-                        "macrolabic.GOOD"= "Macrolabic - Good",
-                        "old.low"="Old - Low",
-                        "old.high"="Old - High"),
+                        "female.POOR" = "Female - Poor diet",
+                        "female.GOOD" = "Female - Good diet",
+                        "brachylabic.POOR" = "Brachylabic male - Poor diet",
+                        "brachylabic.GOOD" = "Brachylabic male - Good diet",
+                        "macrolabic.POOR" = "Macrolabic male - Poor diet",
+                        "macrolabic.GOOD"= "Macrolabic male - Good diet"),
                       limits = c("female.POOR","female.GOOD","brachylabic.POOR", "brachylabic.GOOD", "macrolabic.POOR", "macrolabic.GOOD")) +
   scale_shape_manual("",values=c(16,1,16,16,1,1), 
                      labels = c(
-                       "female.POOR" = "Female - Poor",
-                       "female.GOOD" = "Female - Good",
-                       "brachylabic.POOR" = "Brachylabic - Poor",
-                       "brachylabic.GOOD" = "Brachylabic - Good",
-                       "macrolabic.POOR" = "Macrolabic - Poor",
-                       "macrolabic.GOOD"= "Macrolabic - Good",
-                       "old.low"="Old - Low",
-                       "old.high"="Old - High"),
+                       "female.POOR" = "Female - Poor diet",
+                       "female.GOOD" = "Female - Good diet",
+                       "brachylabic.POOR" = "Brachylabic male - Poor diet",
+                       "brachylabic.GOOD" = "Brachylabic male - Good diet",
+                       "macrolabic.POOR" = "Macrolabic male - Poor diet",
+                       "macrolabic.GOOD"= "Macrolabic male - Good diet"),
                      limits = c("female.POOR","female.GOOD","brachylabic.POOR", "brachylabic.GOOD", "macrolabic.POOR", "macrolabic.GOOD")) +
   xlab("Pronotum length (mm)") +
   ylab("Forceps length (mm)")
@@ -349,7 +387,12 @@ forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label
 figure_2 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
   ggside(collapse="y") +
   theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(
+    legend.position = c(0.02, 0.98),   # x, y in [0,1]
+    legend.justification = c(0, 1)     # anchor legend's top-left corner
+  ) +
+  theme(legend.text = element_text(size = 12)) +
   theme(strip.text.y = element_text(size = 14, face="bold")) +
   theme(strip.text.x = element_text(size = 14, face="bold")) +
   theme(axis.title.x = element_text(size = 16, face="bold")) +
