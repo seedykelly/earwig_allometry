@@ -218,6 +218,8 @@ flextable(final_table) %>%
 ```
 
 
+\newpage
+
 **Table S2.** Posterior summaries from the Bayesian morph-specific male allometry model. The model estimated Gaussian regression of log forceps length including body size (logPc), morph group, diet, density, and their interactions, with varying intercepts and slopes for mother identity (id_mere). Reported values are posterior medians and 95% credible intervals (CrI).
 ```{r}
 #| echo: false

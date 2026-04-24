@@ -113,8 +113,8 @@ load(file ="data/processed/dat.morphs.Rda")
 # dat.morphs <- dat.morphs %>%
 #   mutate(group=replace(group, id=="DJODI", "2"))
 # # 
-dat.morphs %>%
-  filter(morph=="CCNJO")
+# dat.morphs %>%
+#   filter(morph=="CCNJO")
 
 # # earwig_data_complete %>%
 # #   filter(id_mere=="MNLDO")
@@ -333,9 +333,9 @@ library(patchwork)
 
 dat.morphs.2 <- dat.morphs %>% mutate(
   morph = case_when(
-    group == "minor" ~ "brachylabic",
-    group == "major" ~ "macrolabic",
-    group == "female" ~ "female")
+    group == "2" ~ "brachylabic",
+    group == "1" ~ "macrolabic",
+    group == "3" ~ "female")
 )
 
 dat.morphs.2$morph <- factor(dat.morphs.2$morph, levels=c('female', 'macrolabic', 'brachylabic'))
@@ -425,18 +425,20 @@ formula_all <- bf(
     (1 + logP | id_mere)
 )
 
-mod_all <- brm(
-  formula = formula_all,
-  data    = dat.morphs,
-  family  = gaussian(),
-  prior   = priors_sex,   # you can reuse or tweak
-  backend = "cmdstanr",
-  chains  = 4,
-  cores   = 4,
-  iter    = 4000,
-  file    = "data/processed/mod_all.Rds",
-  control = list(adapt_delta = 0.97)
-)
+# mod_all <- brm(
+#   formula = formula_all,
+#   data    = dat.morphs,
+#   family  = gaussian(),
+#   prior   = priors_sex,   # you can reuse or tweak
+#   backend = "cmdstanr",
+#   chains  = 4,
+#   cores   = 4,
+#   iter    = 4000,
+#   file    = "data/processed/mod_all.Rds",
+#   control = list(adapt_delta = 0.97)
+# )
+
+mod_all <- readRDS(file = "data/processed/mod_all.Rds")
 
 # -----------------------------
 # 1. SEQUENCE FOR PREDICTION
@@ -633,7 +635,7 @@ figure_4 <- ggplot(slope_df,
   )) +
   
   labs(
-    x = expression(paste("Allometric slope (", beta, ")")),
+    x = expression(bold(paste("Allometric slope (", beta, ")"))),
     y = "Rearing density",
     color = "Diet"
   ) +
@@ -642,12 +644,10 @@ figure_4 <- ggplot(slope_df,
   theme(
     panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
     axis.line = element_line(colour = "black", linewidth = 0.8),
-    
     strip.text = element_text(size = 14, face = "bold"),
     axis.title.x = element_text(size = 16, face = "bold"),
     axis.title.y = element_text(size = 16, face = "bold"),
     axis.text = element_text(size = 14),
-    
     legend.position = "right"
   )
 
