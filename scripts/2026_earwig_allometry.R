@@ -1,141 +1,105 @@
-#rm(list=ls())
-# if git is ahead by X commits do this: git reset --soft HEAD~1 (8=# of commits)
-#install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+# ==============================================================================
+# RESEARCH PROJECT: 2026 Earwig Allometry
+#
+# DESCRIPTION:
+# This script analyzes weapon allometry across nested biological levels. 
+# It examines how sex, morph (major/minor), diet, and density influence 
+# scaling plasticity and intercept/slope parameters.
+#
+# KEY STEPS:
+# 1. Data cleaning and preparation
+# 2. Bayesian linear and quadratic allometric modeling
+# 3. Model comparison (LOO)
+# 4. Post-hoc slope analysis and environmental plasticity
+# 5. High-quality visualization for publication
+# ==============================================================================
 
+## ---- 1. Load Libraries ----
 
-# We show that weapon allometry is structured across nested biological levels, with sex determining 
-# scaling plasticity, morphs diverging primarily in intercept, environmental conditions modifying scaling parameters, 
-# and families exhibiting integrated intercept–slope covariance.
+library(tidyverse)  # Core data manipulation and visualization
+library(scales)     # For scale formatting (e.g., label_number)
+library(broman)     # For emmeans/emtrends integration
+library(cowplot)    # For plot arrangement
+library(flextable)  # For table generation
+library(officer)    # For document interaction
+library(knitr)       # For table formatting
+library(officedown) # For advanced RMarkdown/Quarto
+library(broom.mixed) # For tidying model outputs
+library(performance) # For model diagnostics
+library(brms)        # Bayesian regression modeling
+library(tidybayes)   # For posterior distribution visualization
+library(mixtools)    # For mixture modeling (used in scratchpad)
+library(mixsmsn)    # Used in scratchpad
+library(cmdstanr)   # High-performance Stan backend
+library(ggside)     # For marginal distributions in plots
+library(posterior) # For posterior sample manipulation
+library(emmeans)     # For marginal means and trends
+library(patchwork)  # For combining plots
+library(ggrepel)    # For non-overlapping labels
+library(here)
 
-## ---- analysis ----
-library(scales)
-library(dplyr)
-library(ggplot2)
-library(tidyverse)
-library(broman)
-library(cowplot)
-library(flextable)
-library(officer)
-library(knitr)
-library(officedown)
-library(broom.mixed)
-library(stringr)
-library(performance)
-library(brms)
-library(tidybayes)
-library(mixtools)
-library(mixsmsn)
-library(cmdstanr)
-library(ggside)
-library(posterior)
-library(emmeans)
+## ---- 2. Data Loading and Cleaning ----
 
-# packageVersion("mixsmsn")
-
+# Load raw observations
 earwig_data_raw <- read.csv(file="data/raw/earwig_allometry.csv", header=TRUE, sep=",", dec=".") %>%
   as.data.frame()
 
+# Clean basic variables and convert to factors
 earwig_data <- earwig_data_raw %>%
-  mutate(sex = recode(sex, femelle = "female",
-                      male = "male")) %>%
-  rename(id=Id_adulte) %>%
-  mutate(density = as.factor(density), diet = as.factor(diet), sex = as.factor(sex), id_mere = as.factor(id_mere))
+  mutate(
+    sex = recode(sex, femelle = "female", male = "male"),
+    id = Id_adulte,
+    density = as.factor(density), 
+    diet = as.factor(diet), 
+    sex = as.factor(sex), 
+    id_mere = as.factor(id_mere)
+  )
 
-# select complete replicates: density-1 with 1, density-4 with 3-4, density-8 with 6, 7,or 8
+# Filter for complete replicates to ensure statistical consistency:
+# density-1 must have 1, density-4 must have 3-4, density-8 must have 6, 7, or 8
 earwig_two <- earwig_data %>%
   group_by(boite_petri, diet, density) %>%
-  summarise(num_individ = n()) %>%
-  filter(density=="8" & num_individ >= 6 | density=="4" & num_individ >= 3 | density=="1" & num_individ == 1) %>%
-  mutate(valid=1) %>%
-  ungroup() %>%
+  summarise(num_individ = n(), .groups = "drop") %>%
+  filter(
+    (density == "8" & num_individ >= 6) | 
+    (density == "4" & num_individ >= 3) | 
+    (density == "1" & num_individ == 1)
+  ) %>%
+  mutate(valid = 1) %>%
   dplyr::select(boite_petri, valid) 
 
-dat.new <- left_join(earwig_data,earwig_two, by="boite_petri") %>%
-  filter(valid==1) %>%
-  mutate(treat_date = dmy(date_treatment), adult_date=dmy(date_adulte)) %>%
-  mutate(dev_time= as.numeric(difftime(adult_date,treat_date,units = "days"))) %>%
-  filter(sex!="") %>%
+# Merge valid replicates back and process dates/development time
+dat.new <- left_join(earwig_data, earwig_two, by = "boite_petri") %>%
+  filter(valid == 1) %>%
+  mutate(
+    treat_date = dmy(date_treatment), 
+    adult_date = dmy(date_adulte),
+    dev_time = as.numeric(difftime(adult_date, treat_date, units = "days"))
+  ) %>%
+  filter(sex != "") %>%
   droplevels()
 
-# ================================
-# Morph analysis
-# ================================
+## ---- 3. Morph Integration ----
 
-## Males ##
-# males <- dat.new %>%
-#   filter(sex=="male")
-# 
-# bimodal.analysis <- smsn.mix(males$forceps_L, nu=3, g=2, get.init = TRUE, criteria = TRUE,
-#                              group = TRUE, family = "Skew.normal", iter.max = 1000, calc.im=TRUE, obs.prob = TRUE)
-# # bimodal.analysis$aic
-# mixsmsn::mix.print(bimodal.analysis, digits=3)
-# saveRDS(bimodal.analysis, file ="data/processed/bimodal.analysis.rda")
-# str(bimodal.analysis)
-# 
-# mix.hist(males$forceps_L,bimodal.analysis)
-# 
-# # stick the group number from the mixed analysis onto the "males" data tibble
-# # and convert group to morph
-# ## bimodal
-# males$group <- bimodal.analysis$group
-# males <- males %>% mutate(
-#   morph = case_when(
-#     group == 2 ~ "minor",
-#     group == 1 ~ "major")
-# )
-# 
-# males$group <- as.factor(males$group)
+# The morph categorization (identifying major/minor males) was performed 
+# in the scratchpad: scripts/2026_earwig_morph_analysis_scratchpad.R
+load(file = "data/processed/dat.morphs.Rda")
 
-# save(males,file="data/processed/males.Rda")
-
-# males %>%
-# arrange(forceps_L) %>%
-#   as.tibble() %>%
-#   print(n=1000) # to determine brachy vs macro cut-off
-
-## FEMALES ##
-# females <- dat.new %>%
-#   filter(sex=="female") %>%
-#   mutate(group=3, morph="female")
-# str(females)
-# 
-# # save(females,file="data/processed/females.Rda")
-# 
-# females$group <- as.factor(females$group)
-# 
-# ## COMBINE DATA FRAMES
-# dat.morphs <- rbind(males, females)
-
-# save(dat.morphs, file = "data/processed/dat.morphs.Rda")
-load(file ="data/processed/dat.morphs.Rda")
-
-# # smsn.mix not categorizing individual correctly: he's clearly a minor
-# dat.morphs <- dat.morphs %>%
-#   mutate(group=replace(group, id=="DJODI", "2"))
-# # 
-# dat.morphs %>%
-#   filter(morph=="CCNJO")
-
-# # earwig_data_complete %>%
-# #   filter(id_mere=="MNLDO")
-# 
-# # save(dat.morphs,file="data/processed/dat.morphs.Rda")
-
-# ============================
-# Allometry: three-group model
-# ============================
-
+# Prepare allometric variables and standardized factors for modeling and plotting
+# We consolidate factor levels and labels here to avoid repetitive 'recode' in plots.
 dat.morphs <- dat.morphs %>%
   mutate(
     logF = log(forceps_L),
     logP = log(pronotum),
     
+    # Grouping for modeling: Combining sex and morph into one factor
     group3 = case_when(
       sex == "female" ~ "female",
       sex == "male" & morph == "minor" ~ "brachylabic",
       sex == "male" & morph == "major" ~ "macrolabic"
     ),
     
+    # Define factor levels and labels once for consistency
     group3  = factor(group3, levels = c("female", "brachylabic", "macrolabic")),
     diet    = factor(diet, levels = c("GOOD", "POOR")),
     density = factor(density, levels = c("1", "4", "8")),
@@ -143,864 +107,231 @@ dat.morphs <- dat.morphs %>%
   ) %>%
   filter(!is.na(group3), !is.na(logF), !is.na(logP))
 
-str(dat.morphs)
+## ---- 4. Bayesian Allometric Modeling ----
 
-summary_group3 <- dat.morphs %>%
-  group_by(group3, diet, density) %>%
-  summarise(
-    n = n(),
-    mean_forceps = mean(forceps_L, na.rm = TRUE),
-    se_forceps = sd(forceps_L, na.rm = TRUE) / sqrt(n),
-    mean_pronotum = mean(pronotum, na.rm = TRUE),
-    se_pronotum = sd(pronotum, na.rm = TRUE) / sqrt(n),
-    .groups = "drop"
-  )
+# Load pre-fitted models and comparison results
+message("Loading pre-fitted models from models/...")
+mod_all <- readRDS(here::here("models", "mod_all.rds"))
+mod_all_quad <- readRDS(here::here("models", "mod_all_quad.rds"))
+loo_table <- readRDS(here::here("models", "loo_table.rds"))
 
+print(loo_table)
+
+## ---- 5. Post-hoc Statistical Analysis ----
+
+# Generate descriptive summary table for Results (used in .qmd)
 summary.table.2 <- dat.morphs %>%
   group_by(group3) %>%
   summarise(
-    mean_forceps  = mean(forceps_L, na.rm = TRUE),
-    sd_forceps    = sd(forceps_L, na.rm = TRUE),
-    n             = n(),
-    se_forceps    = sd_forceps / sqrt(n),
-    
+    mean_forceps = mean(forceps_L, na.rm = TRUE),
+    sd_forceps   = sd(forceps_L, na.rm = TRUE),
+    n            = n(),
+    se_forceps   = sd_forceps / sqrt(n),
     mean_pronotum = mean(pronotum, na.rm = TRUE),
     sd_pronotum   = sd(pronotum, na.rm = TRUE),
     se_pronotum   = sd_pronotum / sqrt(n),
-    
     .groups = "drop"
-  ) %>%
-  mutate(
-    group3 = factor(
-      group3,
-      levels = c("female", "macrolabic", "brachylabic")
-    )
-  ) %>%
-  arrange(group3)
-
-formula_all <- bf(
-  logF ~ logP * group3 * diet * density +
-    (1 + logP | id_mere) + (1 | boite_petri)
-)
-
-priors_all <- c(
-  prior(normal(0, 1), class = "b"),
-  prior(normal(0, 2), class = "Intercept"),
-  prior(student_t(3, 0, 1), class = "sigma"),
-  prior(student_t(3, 0, 1), class = "sd"),
-  prior(lkj(2), class = "cor")
-)
-
-mod_all <- brm(
-  formula = formula_all,
-  data    = dat.morphs,
-  family  = gaussian(),
-  prior   = priors_all,
-  chains  = 4,
-  cores   = 4,
-  iter    = 4000,
-  backend = "cmdstanr",
-  file    = "data/processed/mod_all.Rds",
-  control = list(adapt_delta = 0.97)
-)
-
-mod_all <- readRDS(file = "data/processed/mod_all.Rds")
-
-summary(mod_all)
-print(tidy(mod_all), n = Inf)
-
-conditional_effects(mod_all)
-
-# ==============================
-# Test for non-linearity
-# ==============================
-
-formula_all_quad <- bf(
-  logF ~ logP * group3 * diet * density +
-    I(logP^2) * group3 * diet * density +
-    (1 + logP | id_mere) + (1 | boite_petri)
-)
-
-priors_all_quad <- priors_all
-
-mod_all_quad <- brm(
-  formula = formula_all_quad,
-  data    = dat.morphs,
-  family  = gaussian(),
-  prior   = priors_all_quad,
-  backend = "cmdstanr",
-  chains  = 4,
-  cores   = 4,
-  iter    = 4000,
-  file    = "data/processed/mod_all_quad.Rds",
-  control = list(adapt_delta = 0.97)
-)
-
-mod_all_quad <- readRDS(file = "data/processed/mod_all_quad.Rds")
-
-# Add LOO criteria
-mod_all <- add_criterion(mod_all, "loo")
-mod_all_quad <- add_criterion(mod_all_quad, "loo")
-
-# Compare linear vs quadratic model
-loo_compare(mod_all, mod_all_quad)
-
-loo_comp <- loo_compare(mod_all, mod_all_quad)
-
-loo_table <- as.data.frame(loo_comp) %>%
-  tibble::rownames_to_column("Model") %>%
-  mutate(
-    Model = recode(Model,
-                   mod_all = "Linear model",
-                   mod_all_quad = "Quadratic model")
   )
 
-loo_table
+# Re-calculate conditional slopes and contrasts from loaded models
+# to ensure all subsequent visualization objects are available.
 
-# ============================
-# Condition-specific slopes
-# ============================
+# 5.1 Calculate conditional slopes (emtrends)
+slopes_all <- emtrends(mod_all, ~ group3 * diet * density, var = "logP")
 
-slopes_all <- emtrends(
-  mod_all,
-  ~ group3 * diet * density,
-  var = "logP"
-)
-
+# Convert emtrends object to a data frame for the Quarto document
 slope_table <- as.data.frame(slopes_all)
+# Rename columns to match .qmd expectations
+if("estimate" %in% colnames(slope_table)) {
+  slope_table <- rename(slope_table, logP.trend = estimate)
+}
+if("lower.CL" %in% colnames(slope_table)) {
+  slope_table <- rename(slope_table, lower.HPD = lower.CL)
+}
+if("upper.CL" %in% colnames(slope_table)) {
+  slope_table <- rename(slope_table, upper.HPD = upper.CL)
+}
 
-# ============================
-# Group comparisons within each environment
-# ============================
+# 5.2 Group comparisons within environments
+group_slope_contrasts <- pairs(emtrends(mod_all, ~ group3 | diet * density, var = "logP"))
 
-group_slope_contrasts <- pairs(
-  emtrends(mod_all, ~ group3 | diet * density, var = "logP")
-)
+# 5.3 Environmental plasticity (slope differences)
+diet_slope_contrasts <- pairs(emtrends(mod_all, ~ diet | group3 * density, var = "logP"))
+density_slope_contrasts <- pairs(emtrends(mod_all, ~ density | group3 * diet, var = "logP"))
 
-# ============================
-# Environmental slope plasticity within each group
-# ============================
+## ---- 6. Visualizations ----
 
-diet_slope_contrasts <- pairs(
-  emtrends(mod_all, ~ diet | group3 * density, var = "logP")
-)
-
-density_slope_contrasts <- pairs(
-  emtrends(mod_all, ~ density | group3 * diet, var = "logP")
-)
-
-summary(diet_slope_contrasts)
-summary(density_slope_contrasts)
-
-# ============================
-# Posterior probabilities for slope contrasts
-# ============================
-
-x_seq <- seq(
-  min(dat.morphs$logP, na.rm = TRUE),
-  max(dat.morphs$logP, na.rm = TRUE),
-  length.out = 100
-)
-
-new_all <- expand.grid(
-  logP    = x_seq,
-  group3  = levels(dat.morphs$group3),
-  diet    = levels(dat.morphs$diet),
-  density = levels(dat.morphs$density),
-  id_mere = NA
-)
-
-epred_all <- posterior_epred(
-  mod_all,
-  newdata = new_all,
-  re_formula = NA
-)
-
-new_all <- new_all %>%
+# Pre-format data for all plots to ensure uniform labeling and aesthetics
+plot_data_master <- dat.morphs %>%
   mutate(
-    fit = apply(epred_all, 2, median),
-    lwr = apply(epred_all, 2, quantile, 0.025),
-    upr = apply(epred_all, 2, quantile, 0.975),
-    panel = recode(group3,
-                   female = "Female",
-                   brachylabic = "Brachylabic male",
-                   macrolabic = "Macrolabic male")
+    # Readable labels for facets and legends
+    Phenotype = factor(recode(group3, 
+                               female = "Female", 
+                               brachylabic = "Brachylabic male", 
+                               macrolabic = "Macrolabic male"),
+                       levels = c("Female", "Brachylabic male", "Macrolabic male")),
+    Diet_lab = factor(recode(diet, GOOD = "Good", POOR = "Poor"), levels = c("Poor", "Good")),
+    Density_lab = factor(recode(density, "1" = "Low", "4" = "Medium", "8" = "High"), 
+                         levels = c("Low", "Medium", "High"))
   )
 
-raw_data <- dat.morphs %>%
-  mutate(
-    panel = recode(group3,
-                   female = "Female",
-                   brachylabic = "Brachylabic male",
-                   macrolabic = "Macrolabic male")
-  )
+# #### Figure 2: Observed Data and Marginal Distributions ####
 
-dat.morphs %>%
-  count(group3, diet, density)
-
-
-
-## ---- end
-
-# ==============================
-# PLOTS
-# ==============================
-
-library(patchwork)
-
-#### figure 2 ####
-
-dat.morphs.2 <- dat.morphs %>% mutate(
-  morph = case_when(
-    group == "2" ~ "brachylabic",
-    group == "1" ~ "macrolabic",
-    group == "3" ~ "female")
-)
-
-dat.morphs.2$morph <- factor(dat.morphs.2$morph, levels=c('female', 'macrolabic', 'brachylabic'))
-dat.morphs.2$diet <- factor(dat.morphs.2$diet, levels=c('POOR', 'GOOD'))
-library(ggrepel)
-
-density.labs <- c("Low", "Medium","High")
-names(density.labs) <- c("1", "4", "8")
-
-sex.labs <- c("Females", "Brachylabic males", "Macrolabic males")
-names(sex.labs) <- c("female", "brachylabic", "macrolabic")
-
-forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label=id_mere,colour=diet)) +
-  geom_point(size=3,alpha=0.3, stroke=NA) +
-  facet_grid(group3~density,labeller = labeller(density = density.labs, group3 = sex.labs)) +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  theme(strip.text.y = element_text(size = 14)) +
-  theme(strip.text.x = element_text(size = 14)) +
-  theme(axis.title.x = element_text(size = 16)) +
-  theme(axis.title.y = element_text(size = 16)) +
-  theme(axis.text.x = element_text(size=14)) +
-  theme(axis.text.y = element_text(size=14)) +
+figure_2 <- ggplot(plot_data_master, aes(x = pronotum, y = forceps_L, colour = Diet_lab)) +
+  geom_point(size = 3, alpha = 0.3, stroke = NA) +
+  facet_grid(group3 ~ density, 
+             labeller = labeller(density = c("1"="Low", "4"="Medium", "8"="High"), 
+                                 group3 = c("female"="Females", "brachylabic"="Brachylabic males", "macrolabic"="Macrolabic males"))) +
+  geom_ysidedensity(aes(x = after_stat(density), group = group3), colour = "black") +
+  ggside(collapse = "y") +
   scale_y_continuous(labels = label_number(accuracy = 0.1)) +
-  scale_colour_manual("Diet",values=c("black", "red"), 
-                      labels = c(
-                        "Poor", "Good")) +
-  xlab("Pronotum length (mm)") +
-  ylab("Forceps length (mm)")
-
-figure_2 <- forceps.body.plot.both + geom_ysidedensity(aes(x = after_stat(density),
-                                                           group = group3),
-                                                       colour = "black") +
-  ggside(collapse="y") +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-  theme(
-    legend.position = c(0.02, 0.98),   # x, y in [0,1]
-    legend.justification = c(0, 1)     # anchor legend's top-left corner
-  ) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(strip.text.y = element_text(size = 14, face="bold")) +
-  theme(strip.text.x = element_text(size = 14, face="bold")) +
-  theme(axis.title.x = element_text(size = 16, face="bold")) +
-  theme(axis.title.y = element_text(size = 16, face="bold")) +
-  theme(axis.text.x = element_text(size=14)) +
-  theme(axis.text.y = element_text(size=14)) +
-  theme(strip.background = element_rect(fill="white")) +
-  theme(ggside.axis.text.x = element_blank()) +
-  theme(ggside.axis.ticks.x = element_blank())
-
-ggsave(figure_2,filename="Figure_2.jpg", width=14.83, height=8.83, dpi=300,antialias="default")
-
-
-#### Figure 3: posterior slope estimates ####
-
-slopes_all <- emtrends(
-  mod_all,
-  ~ group3 * diet * density,
-  var = "logP"
-)
-
-slope_df <- as.data.frame(slopes_all) %>%
-  mutate(
-    group3 = recode(group3,
-                    "female" = "Female",
-                    "brachylabic" = "Brachylabic male",
-                    "macrolabic" = "Macrolabic male"),
-    
-    diet = recode(diet,
-                  "GOOD" = "Good",
-                  "POOR" = "Poor"),
-    
-    density = recode(density,
-                     "1" = "Low",
-                     "4" = "Medium",
-                     "8" = "High"),
-    
-    density = factor(density, levels = c("Low", "Medium", "High")),
-    
-    group3 = factor(group3,
-                    levels = c("Female", "Brachylabic male", "Macrolabic male"))
-  )
-
-figure_3 <- ggplot(
-  slope_df,
-  aes(x = logP.trend,
-      y = density,
-      colour = diet)
-) +
-  geom_vline(
-    xintercept = 1,
-    linetype = "dotted",
-    linewidth = 0.6,
-    alpha = 0.4
-  ) +
-  geom_errorbarh(
-    aes(xmin = lower.HPD, xmax = upper.HPD),
-    width = 0.2,
-    linewidth = 0.6,
-    position = position_dodge(width = 0.5)
-  ) +
-  geom_point(
-    size = 2.5,
-    position = position_dodge(width = 0.5)
-  ) +
-  facet_wrap(~ group3, nrow = 1) +
-  scale_color_manual(
-    values = c(
-      "Good" = "#D55E00",
-      "Poor" = "#0072B2"
-    )
-  ) +
-  #coord_cartesian(xlim = c(-0.2, 1.8)) +
-  labs(
-    x = expression(bold(paste("Allometric slope (", beta, ")"))),
-    y = "Rearing density",
-    colour = "Diet"
-  ) +
-  theme_classic() +
-  theme(
-    panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
-    axis.line = element_line(colour = "black", linewidth = 0.8),
-    strip.text = element_text(size = 14, face = "bold"),
-    axis.title.x = element_text(size = 16, face = "bold"),
-    axis.title.y = element_text(size = 16, face = "bold"),
-    axis.text = element_text(size = 14),
-    legend.position = "right"
-  )
-
-figure_3
-
-ggsave(
-  filename = "figure_3.jpg",
-  plot = figure_3,
-  width = 12.83,
-  height = 8.83,
-  dpi = 300,
-  antialias = "default"
-)
-
-# ==============================
-# Figure S1: predicted allometries
-# Three-group model
-# ==============================
-
-library(dplyr)
-library(ggplot2)
-library(brms)
-
-# Ensure variables match the fitted model
-dat.morphs <- dat.morphs %>%
-  mutate(
-    group3 = factor(group3,
-                    levels = c("female", "brachylabic", "macrolabic")),
-    diet = factor(diet, levels = c("GOOD", "POOR")),
-    density = factor(density, levels = c("1", "4", "8")),
-    panel = factor(
-      recode(group3,
-             female = "Female",
-             brachylabic = "Brachylabic",
-             macrolabic = "Macrolabic"),
-      levels = c("Female", "Brachylabic", "Macrolabic")
-    )
-  )
-
-# Prediction grid: only across observed logP range per cell
-x_ranges <- dat.morphs %>%
-  group_by(group3, diet, density) %>%
-  summarise(
-    min_logP = min(logP, na.rm = TRUE),
-    max_logP = max(logP, na.rm = TRUE),
-    n = n(),
-    .groups = "drop"
-  )
-
-new_all <- x_ranges %>%
-  rowwise() %>%
-  do(data.frame(
-    group3 = .$group3,
-    diet = .$diet,
-    density = .$density,
-    logP = seq(.$min_logP, .$max_logP, length.out = 50),
-    n = .$n
-  )) %>%
-  ungroup() %>%
-  mutate(
-    group3 = factor(group3, levels = levels(dat.morphs$group3)),
-    diet = factor(diet, levels = levels(dat.morphs$diet)),
-    density = factor(density, levels = levels(dat.morphs$density)),
-    id_mere = NA,
-    panel = factor(
-      recode(group3,
-             female = "Female",
-             brachylabic = "Brachylabic",
-             macrolabic = "Macrolabic"),
-      levels = c("Female", "Brachylabic", "Macrolabic")
-    )
-  )
-
-# Posterior fitted values, excluding family-level effects
-epred_all <- posterior_epred(
-  mod_all,
-  newdata = new_all,
-  re_formula = NA
-)
-
-new_all <- new_all %>%
-  mutate(
-    fit = apply(epred_all, 2, median),
-    lwr = apply(epred_all, 2, quantile, 0.025),
-    upr = apply(epred_all, 2, quantile, 0.975)
-  )
-
-# Plot
-figure_S1 <- ggplot(
-  new_all,
-  aes(
-    x = logP,
-    y = fit,
-    colour = diet,
-    linetype = density,
-    group = interaction(diet, density)
-  )
-) +
-  geom_point(
-    data = dat.morphs,
-    aes(x = logP, y = logF),
-    inherit.aes = FALSE,
-    colour = "grey50",
-    alpha = 0.12,
-    size = 0.7
-  ) +
-  geom_line(linewidth = 1.1) +
-  facet_wrap(~ panel, nrow = 1) +
-  labs(
-    x = "log(Pronotum length, mm)",
-    y = "log(Forceps length, mm)",
-    colour = "Diet",
-    linetype = "Density"
-  ) +
+  scale_colour_manual("Diet", values = c("black", "red"), labels = c("Poor", "Good")) +
+  labs(x = "Pronotum length (mm)", y = "Forceps length (mm)") +
   theme_bw() +
   theme(
     panel.grid = element_blank(),
-    strip.text = element_text(size = 13, face = "bold"),
-    axis.title = element_text(size = 15, face = "bold"),
-    axis.text = element_text(size = 12),
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14),
+    legend.position = c(0.02, 0.98),
+    legend.justification = c(0, 1),
     strip.background = element_rect(fill = "white"),
-    legend.position = "right"
+    ggside.axis.text.x = element_blank(),
+    ggside.axis.ticks.x = element_blank()
   )
 
-figure_S1
+ggsave(figure_2, filename = "Figure_2.jpg", width = 14.83, height = 8.83, dpi = 300)
 
-ggsave(
-  filename = "figure_S1.jpg",
-  plot = figure_S1,
-  width = 10,
-  height = 6,
-  dpi = 300
-)
+# #### Figure 3: Posterior Slope Estimates ####
 
-
-#----------------------------------------------------------
-# Linear versus quadratic allometry predictions
-#----------------------------------------------------------
-
-stopifnot(
-  inherits(mod_all, "brmsfit"),
-  inherits(mod_all_quad, "brmsfit")
-)
-
-#----------------------------------------------------------
-# 1. Create a common prediction grid
-#
-# Predictions are restricted to the observed body-size
-# range within each phenotype × diet × density combination.
-#----------------------------------------------------------
-
-prediction_grid <- dat.morphs %>%
-  filter(
-    !is.na(logP),
-    !is.na(group3),
-    !is.na(diet),
-    !is.na(density)
-  ) %>%
-  group_by(
-    group3,
-    diet,
-    density
-  ) %>%
-  summarise(
-    logP_min = min(logP),
-    logP_max = max(logP),
-    .groups = "drop"
-  ) %>%
+slope_df <- as.data.frame(slopes_all) %>%
   mutate(
-    logP = map2(
-      logP_min,
-      logP_max,
-      ~ seq(
-        from = .x,
-        to = .y,
-        length.out = 100
-      )
-    )
-  ) %>%
-  select(
-    -logP_min,
-    -logP_max
-  ) %>%
+    Phenotype = factor(recode(group3, female = "Female", brachylabic = "Brachylabic male", macrolabic = "Macrolabic male"),
+                       levels = c("Female", "Brachylabic male", "Macrolabic male")),
+    Diet_lab = factor(recode(diet, GOOD = "Good", POOR = "Poor"), levels = c("Good", "Poor")),
+    Density_lab = factor(recode(density, "1" = "Low", "4" = "Medium", "8" = "High"), 
+                         levels = c("Low", "Medium", "High"))
+  )
+
+figure_3 <- ggplot(slope_df, aes(x = logP.trend, y = Density_lab, colour = Diet_lab)) +
+  geom_vline(xintercept = 1, linetype = "dotted", linewidth = 0.6, alpha = 0.4) +
+  geom_errorbarh(aes(xmin = lower.HPD, xmax = upper.HPD), width = 0.2, linewidth = 0.6, position = position_dodge(width = 0.5)) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.5)) +
+  facet_wrap(~ Phenotype, nrow = 1) +
+  scale_color_manual(values = c("Good" = "#D55E00", "Poor" = "#0072B2")) +
+  labs(x = expression(bold("Allometric slope (" * beta * ")")), y = "Rearing density", colour = "Diet") +
+  theme_classic() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14),
+    panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8)
+  )
+
+ggsave(filename = "figure_3.jpg", plot = figure_3, width = 12.83, height = 8.83, dpi = 300)
+
+# #### Figure S1: Predicted Allometries (Population-Level) ####
+
+# Generate prediction grid for population-level averages
+prediction_grid_s1 <- dat.morphs %>%
+  group_by(group3, diet, density) %>%
+  summarise(min_logP = min(logP), max_logP = max(logP), .groups = "drop") %>%
+  mutate(logP = map2(min_logP, max_logP, ~seq(.x, .y, length.out = 50))) %>%
   unnest(logP) %>%
+  mutate(id_mere = NA, boite_petri = NA)
+
+# Get posterior predictions (excluding random effects)
+epred_s1 <- posterior_epred(mod_all, newdata = prediction_grid_s1, re_formula = NA)
+
+new_all_s1 <- prediction_grid_s1 %>%
   mutate(
-    grid_id = row_number()
+    fit = apply(epred_s1, 2, median),
+    lwr = apply(epred_s1, 2, quantile, 0.025),
+    upr = apply(epred_s1, 2, quantile, 0.975),
+    Phenotype = factor(recode(group3, female="Female", brachylabic="Brachylabic", macrolabic="Macrolabic"),
+                       levels = c("Female", "Brachylabic", "Macrolabic"))
   )
 
-# Add valid grouping-factor values for compatibility with
-# the fitted brms models. These values are ignored because
-# re_formula = NA requests population-level predictions.
+figure_S1 <- ggplot(new_all_s1, aes(x = logP, y = fit, colour = diet, linetype = density, group = interaction(diet, density))) +
+  geom_point(data = dat.morphs, aes(x = logP, y = logF), inherit.aes = FALSE, colour = "grey50", alpha = 0.12, size = 0.7) +
+  geom_line(linewidth = 1.1) +
+  facet_wrap(~ Phenotype, nrow = 1) +
+  labs(x = "log(Pronotum length, mm)", y = "log(Forceps length, mm)", colour = "Diet", linetype = "Density") +
+  theme_bw() +
+  theme(panel.grid = element_blank(), strip.text = element_text(size = 13, face = "bold"),
+        axis.title = element_text(size = 15, face = "bold"), axis.text = element_text(size = 12))
 
-reference_mother <- dat.morphs %>%
-  filter(!is.na(id_mere)) %>%
-  slice(1) %>%
-  pull(id_mere)
+ggsave("figure_S1.jpg", plot = figure_S1, width = 10, height = 6, dpi = 300)
 
-reference_dish <- dat.morphs %>%
-  filter(!is.na(boite_petri)) %>%
-  slice(1) %>%
-  pull(boite_petri)
+# #### Figure S2: Linear vs. Quadratic Comparison ####
 
-prediction_grid <- prediction_grid %>%
-  mutate(
-    id_mere = reference_mother,
-    boite_petri = reference_dish
-  )
-
-#----------------------------------------------------------
-# 2. Function for population-level posterior predictions
-#----------------------------------------------------------
-
-get_population_predictions <- function(
-    fit,
-    newdata,
-    model_label,
-    ndraws = 2000
-) {
-  
-  epred <- posterior_epred(
-    fit,
-    newdata = newdata,
-    re_formula = NA,
-    ndraws = ndraws
-  )
-  
+# Helper to extract population-level predictions
+get_pop_preds <- function(fit, newdata, label) {
+  epred <- posterior_epred(fit, newdata = newdata, re_formula = NA)
   newdata %>%
     mutate(
-      logF_median = apply(
-        epred,
-        2,
-        median
-      ),
-      
-      logF_lower = apply(
-        epred,
-        2,
-        quantile,
-        probs = 0.025
-      ),
-      
-      logF_upper = apply(
-        epred,
-        2,
-        quantile,
-        probs = 0.975
-      ),
-      
-      Model = model_label
+      logF_med = apply(epred, 2, median),
+      logF_low = apply(epred, 2, quantile, probs = 0.025),
+      logF_high = apply(epred, 2, quantile, probs = 0.975),
+      Model = label
     )
 }
 
-#----------------------------------------------------------
-# 3. Generate predictions from both models
-#----------------------------------------------------------
+# Create common prediction grid
+prediction_grid_s2 <- dat.morphs %>%
+  group_by(group3, diet, density) %>%
+  summarise(min_logP = min(logP), max_logP = max(logP), .groups = "drop") %>%
+  mutate(logP = map2(min_logP, max_logP, ~seq(.x, .y, length.out = 100))) %>%
+  unnest(logP) %>%
+  mutate(id_mere = dat.morphs$id_mere[1], boite_petri = dat.morphs$boite_petri[1])
 
 set.seed(123)
-
-linear_predictions <- get_population_predictions(
-  fit = mod_all,
-  newdata = prediction_grid,
-  model_label = "Linear"
-)
-
+lin_preds <- get_pop_preds(mod_all, prediction_grid_s2, "Linear")
 set.seed(123)
+quad_preds <- get_pop_preds(mod_all_quad, prediction_grid_s2, "Quadratic")
 
-quadratic_predictions <- get_population_predictions(
-  fit = mod_all_quad,
-  newdata = prediction_grid,
-  model_label = "Quadratic"
-)
-
-#----------------------------------------------------------
-# 4. Helper for plotting labels
-#----------------------------------------------------------
-
-format_plot_variables <- function(data) {
-  
-  data %>%
-    mutate(
-      Phenotype = recode(
-        as.character(group3),
-        "female" = "Female",
-        "brachylabic" = "Brachylabic male",
-        "macrolabic" = "Macrolabic male"
-      ),
-      
-      Diet = recode(
-        as.character(diet),
-        "GOOD" = "Good",
-        "POOR" = "Poor"
-      ),
-      
-      Density = recode(
-        as.character(density),
-        "1" = "Low",
-        "4" = "Medium",
-        "8" = "High"
-      ),
-      
-      Phenotype = factor(
-        Phenotype,
-        levels = c(
-          "Female",
-          "Brachylabic male",
-          "Macrolabic male"
-        )
-      ),
-      
-      Diet = factor(
-        Diet,
-        levels = c(
-          "Good",
-          "Poor"
-        )
-      ),
-      
-      Density = factor(
-        Density,
-        levels = c(
-          "Low",
-          "Medium",
-          "High"
-        )
-      )
-    )
-}
-
-#----------------------------------------------------------
-# 5. Combine, format, and back-transform predictions
-#----------------------------------------------------------
-
-model_predictions <- bind_rows(
-  linear_predictions,
-  quadratic_predictions
-) %>%
-  format_plot_variables() %>%
+# Combine and back-transform for plotting
+plot_data_s2 <- bind_rows(lin_preds, quad_preds) %>%
   mutate(
-    Model = factor(
-      Model,
-      levels = c(
-        "Linear",
-        "Quadratic"
-      )
-    ),
-    
-    pronotum_predicted = exp(logP),
-    forceps_median = exp(logF_median),
-    forceps_lower = exp(logF_lower),
-    forceps_upper = exp(logF_upper)
+    Phenotype = factor(recode(as.character(group3), female="Female", brachylabic="Brachylabic male", macrolabic="Macrolabic male"),
+                       levels = c("Female", "Brachylabic male", "Macrolabic male")),
+    Diet_lab = factor(recode(as.character(diet), GOOD="Good", POOR="Poor"), levels = c("Good", "Poor")),
+    Density_lab = factor(recode(as.character(density), "1"="Low", "4"="Medium", "8"="High"), 
+                       levels = c("Low", "Medium", "High")),
+    pronotum_pred = exp(logP),
+    forceps_med = exp(logF_med),
+    forceps_low = exp(logF_low),
+    forceps_high = exp(logF_high),
+    Model = factor(Model, levels = c("Linear", "Quadratic"))
   )
 
-linear_plot_data <- model_predictions %>%
-  filter(Model == "Linear")
-
-quadratic_plot_data <- model_predictions %>%
-  filter(Model == "Quadratic")
-
-#----------------------------------------------------------
-# 6. Prepare observed data
-#----------------------------------------------------------
-
-observed_plot_data <- dat.morphs %>%
-  filter(
-    !is.na(logP),
-    !is.na(logF),
-    !is.na(group3),
-    !is.na(diet),
-    !is.na(density)
-  ) %>%
-  format_plot_variables() %>%
+obs_data_s2 <- dat.morphs %>%
   mutate(
-    pronotum_observed = exp(logP),
-    forceps_observed = exp(logF)
+    Phenotype = factor(recode(group3, female="Female", brachylabic="Brachylabic male", macrolabic="Macrolabic male"),
+                       levels = c("Female", "Brachylabic male", "Macrolabic male")),
+    Diet_lab = factor(recode(as.character(diet), GOOD="Good", POOR="Poor"), levels = c("Good", "Poor")),
+    Density_lab = factor(recode(as.character(density), "1"="Low", "4"="Medium", "8"="High"), 
+                       levels = c("Low", "Medium", "High")),
+    pronotum_obs = exp(logP),
+    forceps_obs = exp(logF)
   )
-
-# Confirm that the required plotting variables exist
-stopifnot(
-  all(
-    c(
-      "pronotum_predicted",
-      "forceps_median",
-      "forceps_lower",
-      "forceps_upper",
-      "Phenotype",
-      "Diet",
-      "Density"
-    ) %in% names(quadratic_plot_data)
-  )
-)
-
-#----------------------------------------------------------
-# 7. Plot quadratic predictions with linear predictions
-#    overlaid as thin grey lines
-#----------------------------------------------------------
-
 
 figure_s_quadratic <- ggplot() +
-  
-  # Observed individuals
-  geom_point(
-    data = observed_plot_data,
-    aes(
-      x = pronotum_observed,
-      y = forceps_observed,
-      colour = Diet
-    ),
-    alpha = 0.18,
-    size = 0.7
-  ) +
-  
-  # Credible intervals from the quadratic model
-  geom_ribbon(
-    data = quadratic_plot_data,
-    aes(
-      x = pronotum_predicted,
-      ymin = forceps_lower,
-      ymax = forceps_upper,
-      fill = Diet,
-      group = Diet
-    ),
-    alpha = 0.18,
-    colour = NA
-  ) +
-  
-  # Median predictions from the linear model
-  geom_line(
-    data = linear_plot_data,
-    aes(
-      x = pronotum_predicted,
-      y = forceps_median,
-      group = Diet,
-      linetype = Model
-    ),
-    colour = "grey30",
-    linewidth = 0.65
-  ) +
-  
-  # Median predictions from the quadratic model
-  geom_line(
-    data = quadratic_plot_data,
-    aes(
-      x = pronotum_predicted,
-      y = forceps_median,
-      colour = Diet,
-      group = Diet,
-      linetype = Model
-    ),
-    linewidth = 1
-  ) +
-  
-  facet_grid(
-    rows = vars(Phenotype),
-    cols = vars(Density),
-    scales = "free_y"
-  ) +
-  
-  scale_x_log10() +
-  scale_y_log10() +
-  
-  scale_linetype_manual(
-    name = "Model",
-    values = c(
-      "Linear" = "dotdash",
-      "Quadratic" = "solid"
-    ),
-    labels = c(
-      "Linear model",
-      "Quadratic model"
-    )
-  ) +
-  
-  labs(
-    x = "Pronotum length (mm)",
-    y = "Forceps length (mm)",
-    colour = "Diet",
-    fill = "Diet"
-  ) +
-  
-  guides(
-    fill = "none",
-    
-    colour = guide_legend(
-      order = 1,
-      override.aes = list(
-        alpha = 1,
-        linewidth = 1
-      )
-    ),
-    
-    linetype = guide_legend(
-      order = 2,
-      override.aes = list(
-        colour = c("grey30", "black"),
-        linewidth = c(0.65, 1)
-      )
-    )
-  ) +
-  
+  geom_point(data = obs_data_s2, aes(x = pronotum_obs, y = forceps_obs, colour = Diet_lab), alpha = 0.18, size = 0.7) +
+  geom_ribbon(data = filter(plot_data_s2, Model == "Quadratic"), 
+              aes(x = pronotum_pred, ymin = forceps_low, ymax = forceps_high, fill = Diet_lab), alpha = 0.18, colour = NA) +
+  geom_line(data = filter(plot_data_s2, Model == "Linear"), 
+            aes(x = pronotum_pred, y = forceps_med, colour = Diet_lab, linetype = Model), colour = "grey30", linewidth = 0.65) +
+  geom_line(data = filter(plot_data_s2, Model == "Quadratic"), 
+            aes(x = pronotum_pred, y = forceps_med, colour = Diet_lab, linetype = Model), linewidth = 1) +
+  facet_grid(rows = vars(Phenotype), cols = vars(Density_lab), scales = "free_y") +
+  scale_x_log10() + scale_y_log10() +
+  scale_linetype_manual(name = "Model", values = c("Linear" = "dotdash", "Quadratic" = "solid"),
+                       labels = c("Linear model", "Quadratic model")) +
+  labs(x = "Pronotum length (mm)", y = "Forceps length (mm)", colour = "Diet") +
   theme_classic() +
-  
-  theme(
-    legend.position = "top",
-    legend.box = "horizontal",
-    strip.background = element_blank(),
-    strip.text = element_text(face = "bold"),
-    axis.title = element_text(face = "bold")
-  )
+  theme(legend.position = "top", strip.text = element_text(face = "bold"), axis.title = element_text(face = "bold"))
 
-figure_s_quadratic
+ggsave("figure_S2.jpg", plot = figure_s_quadratic, width = 10, height = 6, dpi = 300)
 
-ggsave(
-  filename = "figure_S2.jpg",
-  plot = figure_s_quadratic,
-  width = 10,
-  height = 6,
-  dpi = 300
-)
-
-
-
-
+# ---- end ----

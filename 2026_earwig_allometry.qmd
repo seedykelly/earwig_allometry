@@ -35,8 +35,18 @@ bibliography: Bibliography.bib
 csl: evolution.csl
 ---
 
-```{r echo=FALSE}
-knitr::read_chunk('scripts/2026_earwig_allometry.R')
+```{r setup, include=FALSE}
+# Ensure 'here' is available for robust path management
+if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+
+# Explicitly source the main script
+# This ensures all data cleaning and model loading occurs
+source("scripts/2026_earwig_allometry.R")
+
+# Quick check to ensure the model loaded correctly
+if (!exists("mod_all")) {
+  stop("Failed to load 'mod_all' from scripts/2026_earwig_allometry.R. Check if the model files exist in models/ using here::here()")
+}
 ```
 
 ```{r analysis, include=FALSE,echo=FALSE, warning=FALSE, results="hide"}
@@ -64,7 +74,7 @@ Environmental conditions can influence both body size and trait expression and m
 
 Beyond sex, morph, and environment, variation among maternal families can provide insight into the developmental and evolutionary structure of allometry. Families may differ not only in average trait expression but also in the strength of the relationship between trait size and body size. Such variation could arise from genetic differences, maternal effects, or shared developmental conditions. Quantifying among-family variation in allometric slopes therefore offers a means of assessing whether scaling relationships themselves vary among related individuals [@lande1980; @pelabon2014; @hansen2008; @klingenberg2008].
 
-The European earwig (*Forficula auricularia*) provides a useful system for examining how sexual dimorphism and alternative male phenotypes are structured through allometry. Males express two discrete forceps morphs, commonly referred to as brachylabic and macrolabic males, which differ markedly in weapon size and shape [@simmons1996; @tomkins2005a] (@fig-one). Forceps function both as sexual weapons during male–male interactions and as defensive structures, making them traits with dual functions [@meunier2024; @kamimura2024]. Because these morphs coexist within the same population, earwigs provide an opportunity to ask whether males share a common scaling relationship that differs from females, or whether any divergence is associated more strongly with one male morph. Previous studies have documented morph-specific differences in forceps exaggeration, raising the possibility that alternative male phenotypes may follow different allometric trajectories [@simmons1996; @tomkins2005a]. Moreover, recent work on another earwig species revealed positive allometry in female forceps, suggesting that sex differences in forceps scaling may be evolutionarily labile [@matsuzawa2025]. In *F. auricularia*, the macrolabic morph bears the more exaggerated weapon, whereas the brachylabic morph is more common in many populations and tends to be favoured under poorer developmental conditions. This pattern is broadly consistent with the possibility that brachylabic males retain a more female-like morphology under a threshold model of morph expression [@tomkins1999; @tomkins2004a; @tomkins2005a].
+The European earwig (*Forficula auricularia*) provides a useful system for examining how sexual dimorphism and alternative male phenotypes are structured through allometry. Males express two discrete forceps morphs, commonly referred to as brachylabic and macrolabic males, which differ markedly in weapon size and shape [@simmons1996; @tomkins2005a] (@fig-one). Forceps function both as sexual weapons during male–male interactions and as defensive structures, making them traits with dual functions [@meunier2024; @kamimura2014]. Because these morphs coexist within the same population, earwigs provide an opportunity to ask whether males share a common scaling relationship that differs from females, or whether any divergence is associated more strongly with one male morph. Previous studies have documented morph-specific differences in forceps exaggeration, raising the possibility that alternative male phenotypes may follow different allometric trajectories [@simmons1996; @tomkins2005a]. Moreover, recent work on another earwig species revealed positive allometry in female forceps, suggesting that sex differences in forceps scaling may be evolutionarily labile [@matsuzawa2025]. In *F. auricularia*, the macrolabic morph bears the more exaggerated weapon, whereas the brachylabic morph is more common in many populations and tends to be favoured under poorer developmental conditions. This pattern is broadly consistent with the possibility that brachylabic males retain a more female-like morphology under a threshold model of morph expression [@tomkins1999; @tomkins2004a; @tomkins2005a].
 
 Here, we quantify static allometries of forceps length in female, brachylabic male, and macrolabic male *F. auricularia* reared under experimentally manipulated diet and density conditions. We first test whether the three phenotypic groups differ in allometric scaling relationships and whether any divergence is consistent across developmental environments. We then assess whether developmental conditions modify scaling exponents within each group and whether allometric relationships vary among maternal families. By integrating sex, morph, environment, and family effects within a hierarchical framework, we evaluate whether weapon allometry is broadly conserved across phenotypic groups or whether divergence is concentrated within particular male morphs.
 

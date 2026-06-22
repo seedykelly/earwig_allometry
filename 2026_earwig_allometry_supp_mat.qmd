@@ -33,11 +33,18 @@ format:
     reference-doc: supp-template.docx
 ---
 
-```{r echo=FALSE}
-knitr::read_chunk('scripts/2026_earwig_allometry.R')
-```
+```{r setup, include=FALSE, echo=FALSE, warning=FALSE, results="hide"}
+# Ensure 'here' is available for robust path management
+if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
 
-```{r analysis, include=FALSE,echo=FALSE, warning=FALSE, results="hide"}
+# Explicitly source the main script
+# This ensures all data cleaning and model loading occurs
+source("scripts/2026_earwig_allometry.R")
+
+# Quick check to ensure the model loaded correctly
+if (!exists("mod_all")) {
+  stop("Failed to load 'mod_all' from scripts/2026_earwig_allometry.R. Check if the model files exist in models/ using here::here()")
+}
 ```
 
 \newpage
