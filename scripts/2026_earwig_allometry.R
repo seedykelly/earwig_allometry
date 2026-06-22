@@ -122,204 +122,221 @@ load(file ="data/processed/dat.morphs.Rda")
 # # save(dat.morphs,file="data/processed/dat.morphs.Rda")
 
 # ============================
-# Allometry
+# Allometry: three-group model
 # ============================
 
-# ============================
-# sex difference
-# ============================
-
-# Transform variables
 dat.morphs <- dat.morphs %>%
   mutate(
-    logF  = log(forceps_L),
-    logP  = log(pronotum),
-    sex   = factor(sex),
-    group = factor(morph),
-    diet  = factor(diet),
-    density = factor(density)
+    logF = log(forceps_L),
+    logP = log(pronotum),
+    
+    group3 = case_when(
+      sex == "female" ~ "female",
+      sex == "male" & morph == "minor" ~ "brachylabic",
+      sex == "male" & morph == "major" ~ "macrolabic"
+    ),
+    
+    group3  = factor(group3, levels = c("female", "brachylabic", "macrolabic")),
+    diet    = factor(diet, levels = c("GOOD", "POOR")),
+    density = factor(density, levels = c("1", "4", "8")),
+    id_mere = factor(id_mere)
+  ) %>%
+  filter(!is.na(group3), !is.na(logF), !is.na(logP))
+
+str(dat.morphs)
+
+summary_group3 <- dat.morphs %>%
+  group_by(group3, diet, density) %>%
+  summarise(
+    n = n(),
+    mean_forceps = mean(forceps_L, na.rm = TRUE),
+    se_forceps = sd(forceps_L, na.rm = TRUE) / sqrt(n),
+    mean_pronotum = mean(pronotum, na.rm = TRUE),
+    se_pronotum = sd(pronotum, na.rm = TRUE) / sqrt(n),
+    .groups = "drop"
   )
 
-# Reference levels
-dat.morphs$sex     <- relevel(dat.morphs$sex, ref = "female")
-dat.morphs$diet    <- relevel(dat.morphs$diet, ref = "GOOD")
-dat.morphs$density <- relevel(dat.morphs$density, ref = "1")
-
-summary.table <- dat.morphs %>%
-  group_by(morph,diet,density) %>%
-  summarise(n=n())
-
 summary.table.2 <- dat.morphs %>%
-  group_by(morph) %>%
-  summarize(mean_for = mean(forceps_L, na.rm = TRUE),
-            sd.forceps = sd(forceps_L, na.rm = TRUE),
-            n = n(), # counts the number of observations in the current group
-            se.forceps = sd.forceps / sqrt(n), # standard error formula
-            mean.pr = mean(pronotum,na.rm=TRUE),
-            sd.pro = sd(pronotum, na.rm=TRUE),
-            se.pro = sd.pro/sqrt(n),
-            .groups = 'drop' # drops the grouping structure after summarizing
+  group_by(group3) %>%
+  summarise(
+    mean_forceps  = mean(forceps_L, na.rm = TRUE),
+    sd_forceps    = sd(forceps_L, na.rm = TRUE),
+    n             = n(),
+    se_forceps    = sd_forceps / sqrt(n),
+    
+    mean_pronotum = mean(pronotum, na.rm = TRUE),
+    sd_pronotum   = sd(pronotum, na.rm = TRUE),
+    se_pronotum   = sd_pronotum / sqrt(n),
+    
+    .groups = "drop"
+  ) %>%
+  mutate(
+    group3 = factor(
+      group3,
+      levels = c("female", "macrolabic", "brachylabic")
     )
+  ) %>%
+  arrange(group3)
 
-# sex difference
-formula_sex <- bf(
-  logF ~ logP * sex * diet * density +
+formula_all <- bf(
+  logF ~ logP * group3 * diet * density +
     (1 + logP | id_mere)
 )
 
-priors_sex <- c(
-  
-  # Fixed effects (slopes & intercept shifts)
+priors_all <- c(
   prior(normal(0, 1), class = "b"),
-  
-  # Intercept
   prior(normal(0, 2), class = "Intercept"),
-  
-  # Residual SD
   prior(student_t(3, 0, 1), class = "sigma"),
-  
-  # Random effect SDs
   prior(student_t(3, 0, 1), class = "sd"),
-  
-  # Random effect correlation (intercept-slope)
   prior(lkj(2), class = "cor")
 )
 
-# mod_sex <- brm(
-#   formula = formula_sex,
+# mod_all <- brm(
+#   formula = formula_all,
 #   data    = dat.morphs,
 #   family  = gaussian(),
-#   prior   = priors_sex,
+#   prior   = priors_all,
 #   chains  = 4,
 #   cores   = 4,
 #   iter    = 4000,
 #   backend = "cmdstanr",
-#      file = "data/processed/mod_sex.Rds",
+#   file    = "data/processed/mod_all.Rds",
 #   control = list(adapt_delta = 0.97)
 # )
 
-#saveRDS(mod_sex, file = "mod_sex.Rds")
-mod_sex <- readRDS(file = "data/processed/mod_sex.Rds")
+mod_all <- readRDS(file = "data/processed/mod_all.Rds")
 
-print(tidy(mod_sex), n = "all")
+summary(mod_all)
+print(tidy(mod_all), n = Inf)
 
-slopes_sex <- emtrends(
-  mod_sex,
-  ~ sex * diet * density,
-  var = "logP"
-)
+conditional_effects(mod_all)
 
-summary(slopes_sex)
+# ==============================
+# Test for non-linearity
+# ==============================
 
-male_vs_female <- pairs(
-  emtrends(mod_sex, ~ sex | diet * density, var = "logP")
-)
-
-summary(male_vs_female)
-
-
-# =============================
-# test for non-linearity
-# =============================
-
-formula_sex_quad <- bf(
-  logF ~ logP * sex * diet * density +
-    I(logP^2) * sex * diet * density +
+formula_all_quad <- bf(
+  logF ~ logP * group3 * diet * density +
+    I(logP^2) * group3 * diet * density +
     (1 + logP | id_mere)
 )
 
-# mod_sex_quad <- brm(
-#   formula = formula_sex_quad,
+priors_all_quad <- priors_all
+
+# mod_all_quad <- brm(
+#   formula = formula_all_quad,
 #   data    = dat.morphs,
 #   family  = gaussian(),
-#   prior   = priors_sex,
-#   chains  = 4,
-#   cores   = 4,
-#   iter    = 4000,
-#   backend = "cmdstanr",
-#   file    = "data/processed/mod_sex_quad.Rds",
-#   control = list(adapt_delta = 0.97)
-# )
-
-mod_sex_quad <- readRDS(file = "data/processed/mod_sex_quad.Rds")
-
-summary(mod_sex_quad)
-
-loo.comp <- loo(mod_sex, mod_sex_quad)
-
-
-# ============================
-# males only
-# ============================
-males <- subset(dat.morphs, sex == "male")
-males$morph <- factor(males$morph)
-males$morph <- relevel(males$morph, ref = "minor")  # brachylabic as reference
-
-formula_morph <- bf(
-  logF ~ logP * morph * diet * density +
-    (1 + logP | id_mere)
-)
-
-priors_morph <- c(
-  
-  # Population-level fixed effects
-  prior(normal(0, 0.5), class = "b"),
-  
-  # Intercept (log-scale forceps size)
-  prior(normal(1.2, 0.5), class = "Intercept"),
-  
-  # Residual SD
-  prior(student_t(3, 0, 0.5), class = "sigma"),
-  
-  # Random effect SDs
-  prior(student_t(3, 0, 0.3), class = "sd"),
-  
-  # Correlation between random intercept and slope
-  prior(lkj(2), class = "cor")
-)
-
-# mod_morph <- brm(
-#   formula = formula_morph,
-#   data    = males,
-#   family  = gaussian(),
-#   prior   = priors_morph,
+#   prior   = priors_all_quad,
 #   backend = "cmdstanr",
 #   chains  = 4,
 #   cores   = 4,
 #   iter    = 4000,
-#   file    = "data/processed/mod_morph.Rds",
+#   file    = "data/processed/mod_all_quad.Rds",
 #   control = list(adapt_delta = 0.97)
 # )
 
-# saveRDS(mod_morph, file = "mod_morph.Rds")
+mod_all_quad <- readRDS(file = "data/processed/mod_all_quad.Rds")
 
-mod_morph <- readRDS(file = "data/processed/mod_morph.Rds")
+# Add LOO criteria
+mod_all <- add_criterion(mod_all, "loo")
+mod_all_quad <- add_criterion(mod_all_quad, "loo")
 
-print(tidy(mod_morph), n = "all")
+# Compare linear vs quadratic model
+loo_compare(mod_all, mod_all_quad)
 
-draws <- as_draws_df(mod_morph)
+loo_comp <- loo_compare(mod_all, mod_all_quad)
 
-slopes_morph <- emtrends(
-  mod_morph,
-  ~ morph * diet * density,
+loo_table <- as.data.frame(loo_comp) %>%
+  tibble::rownames_to_column("Model") %>%
+  mutate(
+    Model = recode(Model,
+                   mod_all = "Linear model",
+                   mod_all_quad = "Quadratic model")
+  )
+
+loo_table
+
+# ============================
+# Condition-specific slopes
+# ============================
+
+slopes_all <- emtrends(
+  mod_all,
+  ~ group3 * diet * density,
   var = "logP"
 )
 
-summary(slopes_morph)
+slope_table <- as.data.frame(slopes_all)
 
-pairs(
-  emtrends(mod_morph, ~ morph | diet * density, var = "logP")
+# ============================
+# Group comparisons within each environment
+# ============================
+
+group_slope_contrasts <- pairs(
+  emtrends(mod_all, ~ group3 | diet * density, var = "logP")
 )
 
-pairs(
-  emtrends(mod_morph, ~ diet | morph * density, var = "logP")
+# ============================
+# Environmental slope plasticity within each group
+# ============================
+
+diet_slope_contrasts <- pairs(
+  emtrends(mod_all, ~ diet | group3 * density, var = "logP")
 )
 
-
-pairs(
-  emtrends(mod_morph, ~ density | morph * diet, var = "logP")
+density_slope_contrasts <- pairs(
+  emtrends(mod_all, ~ density | group3 * diet, var = "logP")
 )
 
+summary(diet_slope_contrasts)
+summary(density_slope_contrasts)
+
+# ============================
+# Posterior probabilities for slope contrasts
+# ============================
+
+x_seq <- seq(
+  min(dat.morphs$logP, na.rm = TRUE),
+  max(dat.morphs$logP, na.rm = TRUE),
+  length.out = 100
+)
+
+new_all <- expand.grid(
+  logP    = x_seq,
+  group3  = levels(dat.morphs$group3),
+  diet    = levels(dat.morphs$diet),
+  density = levels(dat.morphs$density),
+  id_mere = NA
+)
+
+epred_all <- posterior_epred(
+  mod_all,
+  newdata = new_all,
+  re_formula = NA
+)
+
+new_all <- new_all %>%
+  mutate(
+    fit = apply(epred_all, 2, median),
+    lwr = apply(epred_all, 2, quantile, 0.025),
+    upr = apply(epred_all, 2, quantile, 0.975),
+    panel = recode(group3,
+                   female = "Female",
+                   brachylabic = "Brachylabic male",
+                   macrolabic = "Macrolabic male")
+  )
+
+raw_data <- dat.morphs %>%
+  mutate(
+    panel = recode(group3,
+                   female = "Female",
+                   brachylabic = "Brachylabic male",
+                   macrolabic = "Macrolabic male")
+  )
+
+dat.morphs %>%
+  count(group3, diet, density)
 
 ## ---- end
 
@@ -341,7 +358,6 @@ dat.morphs.2 <- dat.morphs %>% mutate(
 dat.morphs.2$morph <- factor(dat.morphs.2$morph, levels=c('female', 'macrolabic', 'brachylabic'))
 dat.morphs.2$diet <- factor(dat.morphs.2$diet, levels=c('POOR', 'GOOD'))
 library(ggrepel)
-
 
 density.labs <- c("Low", "Medium","High")
 names(density.labs) <- c("1", "4", "8")
@@ -405,194 +421,21 @@ figure_2 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density)
 
 ggsave(figure_2,filename="Figure_2.jpg", width=14.83, height=8.83, dpi=300,antialias="default")
 
-#### figure 3 ####
 
-
-dat.morphs <- dat.morphs %>%
-  mutate(
-    group = case_when(
-      sex == "female" ~ "female",
-      sex == "male" & morph == "minor" ~ "minor",
-      sex == "male" & morph == "major" ~ "major"
-    )
-  )
-
-dat.morphs$group <- factor(dat.morphs$group,
-                           levels = c("female", "minor", "major"))
-
-formula_all <- bf(
-  logF ~ logP * group * diet * density +
-    (1 + logP | id_mere)
-)
-
-# mod_all <- brm(
-#   formula = formula_all,
-#   data    = dat.morphs,
-#   family  = gaussian(),
-#   prior   = priors_sex,   # you can reuse or tweak
-#   backend = "cmdstanr",
-#   chains  = 4,
-#   cores   = 4,
-#   iter    = 4000,
-#   file    = "data/processed/mod_all.Rds",
-#   control = list(adapt_delta = 0.97)
-# )
-
-mod_all <- readRDS(file = "data/processed/mod_all.Rds")
-
-# -----------------------------
-# 1. SEQUENCE FOR PREDICTION
-# -----------------------------
-x_seq <- seq(
-  min(dat.morphs$logP, na.rm = TRUE),
-  max(dat.morphs$logP, na.rm = TRUE),
-  length.out = 100
-)
-
-# -----------------------------
-# 2. NEW DATA (ALL GROUPS)
-# -----------------------------
-new_all <- expand.grid(
-  logP    = x_seq,
-  group   = c("female", "minor", "major"),
-  diet    = c("GOOD", "POOR"),
-  density = c("1", "4", "8"),
-  id_mere = NA
-)
-
-# Ensure factor levels match model
-new_all$group   <- factor(new_all$group, levels = levels(dat.morphs$group))
-new_all$diet    <- factor(new_all$diet, levels = levels(dat.morphs$diet))
-new_all$density <- factor(new_all$density, levels = levels(dat.morphs$density))
-
-# -----------------------------
-# 3. MODEL PREDICTIONS
-# -----------------------------
-epred_all <- posterior_epred(
-  mod_all,
-  newdata = new_all,
-  re_formula = NA
-)
-
-# -----------------------------
-# 4. SUMMARISE POSTERIOR
-# -----------------------------
-new_all$fit <- apply(epred_all, 2, median)
-new_all$lwr <- apply(epred_all, 2, quantile, 0.025)
-new_all$upr <- apply(epred_all, 2, quantile, 0.975)
-
-# -----------------------------
-# 5. PANEL LABELS
-# -----------------------------
-new_all$panel <- case_when(
-  new_all$group == "female" ~ "Female",
-  new_all$group == "minor"  ~ "Brachylabic male",
-  new_all$group == "major"  ~ "Macrolabic male"
-)
-
-new_all$panel <- factor(
-  new_all$panel,
-  levels = c("Female", "Brachylabic male", "Macrolabic male")
-)
-
-# -----------------------------
-# 6. RAW DATA
-# -----------------------------
-raw_data <- dat.morphs %>%
-  mutate(
-    panel = case_when(
-      sex == "female" ~ "Female",
-      sex == "male" & morph == "minor" ~ "Brachylabic male",
-      sex == "male" & morph == "major" ~ "Macrolabic male"
-    )
-  )
-
-raw_data$panel <- factor(
-  raw_data$panel,
-  levels = c("Female", "Brachylabic male", "Macrolabic male")
-)
-
-# -----------------------------
-# 7. FINAL PLOT
-# -----------------------------
-figure_3 <- ggplot(new_all,
-                   aes(x = logP,
-                       y = fit,
-                       color = diet,
-                       fill = diet,
-                       linetype = density,
-                       group = interaction(diet, density))) +
-  
-  # prediction lines
-  geom_line(linewidth = 1.2) +
-  
-  # raw data
-  geom_point(
-    data = raw_data,
-    aes(x = logP, y = logF),
-    inherit.aes = FALSE,
-    color = "black",
-    alpha = 0.08,
-    size = 0.7
-  ) +
-  
-  facet_wrap(~ panel, nrow = 1, scales = "fixed") +
-  
-  scale_color_manual(values = c(
-    "GOOD" = "#D55E00",
-    "POOR" = "#0072B2"
-  )) +
-  
-  scale_fill_manual(values = c(
-    "GOOD" = "#D55E00",
-    "POOR" = "#0072B2"
-  )) +
-  
-  scale_linetype_manual(values = c(
-    "1" = "solid",
-    "4" = "dashed",
-    "8" = "dotted"
-  )) +
-  
-  labs(
-    x = "log(Pronotum length, mm)",
-    y = "log(Forceps length, mm)",
-    color = "Diet",
-    fill = "Diet",
-    linetype = "Density"
-  ) +
-  
-  theme_bw() +
-  theme(
-    panel.grid = element_blank(),
-    strip.text = element_text(size = 14, face = "bold"),
-    axis.title = element_text(size = 16, face = "bold"),
-    axis.text = element_text(size = 14),
-    strip.background = element_rect(fill = "white"),
-    legend.position = c(0.1, 0.75)
-  )
-
-
-figure_3
-ggsave(figure_3, filename="figure_3.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
-
-
-#### figure 4 ####
+#### Figure 3: posterior slope estimates ####
 
 slopes_all <- emtrends(
   mod_all,
-  ~ group * diet * density,
+  ~ group3 * diet * density,
   var = "logP"
 )
 
-slope_df <- as.data.frame(slopes_all)
-
-slope_df <- slope_df %>%
+slope_df <- as.data.frame(slopes_all) %>%
   mutate(
-    group = recode(group,
-                   "female" = "Female",
-                   "minor"  = "Brachylabic male",
-                   "major"  = "Macrolabic male"),
+    group3 = recode(group3,
+                    "female" = "Female",
+                    "brachylabic" = "Brachylabic male",
+                    "macrolabic" = "Macrolabic male"),
     
     diet = recode(diet,
                   "GOOD" = "Good",
@@ -605,41 +448,45 @@ slope_df <- slope_df %>%
     
     density = factor(density, levels = c("Low", "Medium", "High")),
     
-    group = factor(group,
-                   levels = c("Female", "Brachylabic male", "Macrolabic male"))
+    group3 = factor(group3,
+                    levels = c("Female", "Brachylabic male", "Macrolabic male"))
   )
 
-figure_4 <- ggplot(slope_df,
-                   aes(x = logP.trend,
-                       y = density,
-                       color = diet)) +
-  
-  geom_vline(xintercept = 0,
-             linetype = "dotted",
-             linewidth = 0.6,
-             alpha = 0.4) +
-  
-  geom_errorbarh(aes(xmin = lower.HPD, xmax = upper.HPD),
-                 width = 0.2,
-                 linewidth = 0.6,
-                 position = position_dodge(width = 0.5)) +
-  
-  geom_point(size = 2.5,
-             position = position_dodge(width = 0.5)) +
-  
-  facet_wrap(~ group, nrow = 1) +
-  
-  scale_color_manual(values = c(
-    "Good" = "#D55E00",
-    "Poor" = "#0072B2"
-  )) +
-  
+figure_3 <- ggplot(
+  slope_df,
+  aes(x = logP.trend,
+      y = density,
+      colour = diet)
+) +
+  geom_vline(
+    xintercept = 1,
+    linetype = "dotted",
+    linewidth = 0.6,
+    alpha = 0.4
+  ) +
+  geom_errorbarh(
+    aes(xmin = lower.HPD, xmax = upper.HPD),
+    width = 0.2,
+    linewidth = 0.6,
+    position = position_dodge(width = 0.5)
+  ) +
+  geom_point(
+    size = 2.5,
+    position = position_dodge(width = 0.5)
+  ) +
+  facet_wrap(~ group3, nrow = 1) +
+  scale_color_manual(
+    values = c(
+      "Good" = "#D55E00",
+      "Poor" = "#0072B2"
+    )
+  ) +
+  #coord_cartesian(xlim = c(-0.2, 1.8)) +
   labs(
     x = expression(bold(paste("Allometric slope (", beta, ")"))),
     y = "Rearing density",
-    color = "Diet"
+    colour = "Diet"
   ) +
-  
   theme_classic() +
   theme(
     panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
@@ -651,5 +498,136 @@ figure_4 <- ggplot(slope_df,
     legend.position = "right"
   )
 
-ggsave(figure_4, filename="figure_4.jpg", width=12.83, height=8.83, dpi=300,antialias="default")
+figure_3
+
+ggsave(
+  filename = "figure_3.jpg",
+  plot = figure_3,
+  width = 12.83,
+  height = 8.83,
+  dpi = 300,
+  antialias = "default"
+)
+
+# ==============================
+# Figure S1: predicted allometries
+# Three-group model
+# ==============================
+
+library(dplyr)
+library(ggplot2)
+library(brms)
+
+# Ensure variables match the fitted model
+dat.morphs <- dat.morphs %>%
+  mutate(
+    group3 = factor(group3,
+                    levels = c("female", "brachylabic", "macrolabic")),
+    diet = factor(diet, levels = c("GOOD", "POOR")),
+    density = factor(density, levels = c("1", "4", "8")),
+    panel = factor(
+      recode(group3,
+             female = "Female",
+             brachylabic = "Brachylabic",
+             macrolabic = "Macrolabic"),
+      levels = c("Female", "Brachylabic", "Macrolabic")
+    )
+  )
+
+# Prediction grid: only across observed logP range per cell
+x_ranges <- dat.morphs %>%
+  group_by(group3, diet, density) %>%
+  summarise(
+    min_logP = min(logP, na.rm = TRUE),
+    max_logP = max(logP, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  )
+
+new_all <- x_ranges %>%
+  rowwise() %>%
+  do(data.frame(
+    group3 = .$group3,
+    diet = .$diet,
+    density = .$density,
+    logP = seq(.$min_logP, .$max_logP, length.out = 50),
+    n = .$n
+  )) %>%
+  ungroup() %>%
+  mutate(
+    group3 = factor(group3, levels = levels(dat.morphs$group3)),
+    diet = factor(diet, levels = levels(dat.morphs$diet)),
+    density = factor(density, levels = levels(dat.morphs$density)),
+    id_mere = NA,
+    panel = factor(
+      recode(group3,
+             female = "Female",
+             brachylabic = "Brachylabic",
+             macrolabic = "Macrolabic"),
+      levels = c("Female", "Brachylabic", "Macrolabic")
+    )
+  )
+
+# Posterior fitted values, excluding family-level effects
+epred_all <- posterior_epred(
+  mod_all,
+  newdata = new_all,
+  re_formula = NA
+)
+
+new_all <- new_all %>%
+  mutate(
+    fit = apply(epred_all, 2, median),
+    lwr = apply(epred_all, 2, quantile, 0.025),
+    upr = apply(epred_all, 2, quantile, 0.975)
+  )
+
+# Plot
+figure_S1 <- ggplot(
+  new_all,
+  aes(
+    x = logP,
+    y = fit,
+    colour = diet,
+    linetype = density,
+    group = interaction(diet, density)
+  )
+) +
+  geom_point(
+    data = dat.morphs,
+    aes(x = logP, y = logF),
+    inherit.aes = FALSE,
+    colour = "grey50",
+    alpha = 0.12,
+    size = 0.7
+  ) +
+  geom_line(linewidth = 1.1) +
+  facet_wrap(~ panel, nrow = 1) +
+  labs(
+    x = "log(Pronotum length, mm)",
+    y = "log(Forceps length, mm)",
+    colour = "Diet",
+    linetype = "Density"
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid = element_blank(),
+    strip.text = element_text(size = 13, face = "bold"),
+    axis.title = element_text(size = 15, face = "bold"),
+    axis.text = element_text(size = 12),
+    strip.background = element_rect(fill = "white"),
+    legend.position = "right"
+  )
+
+figure_S1
+
+ggsave(
+  filename = "figure_S1.jpg",
+  plot = figure_S1,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+
 
