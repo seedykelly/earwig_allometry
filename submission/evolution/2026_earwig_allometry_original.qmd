@@ -1,0 +1,281 @@
+---
+title: "Hierarchical structuring of weapon allometry in the European earwig."
+
+authors:
+  - name: Céline Ozkan
+    affiliations:
+      - ref: co
+    corresponding: false
+    email: celine.ozkan@etu.univ-lyon1.fr
+    orcid: 
+  - name: Clint D. Kelly
+    affiliations:
+      - ref: cdk
+    corresponding: true
+    email: kelly.clint@uqam.ca
+    orcid: 0000-0002-0693-7211
+    
+affiliations:
+  - id: cdk
+    name: Département des Sciences biologiques, Université du Québec à Montréal, Montréal, Canada
+  - id: co
+    name: Université Claude Bernard Lyon 1, Lyon, France
+
+filters:
+  - authors-block
+  - iagopinal/figure-table-formatter
+  
+file-import: true
+
+format:
+  docx:
+    toc: false
+    reference-doc: word-style-template.docx
+bibliography: Bibliography.bib
+csl: evolution.csl
+---
+
+```{r echo=FALSE}
+knitr::read_chunk('scripts/2026_earwig_allometry.R')
+```
+
+```{r analysis, include=FALSE,echo=FALSE, warning=FALSE, results="hide"}
+```
+
+\newpage
+
+# Abstract
+
+Static allometries describe how trait size covaries with body size and are widely used to investigate the evolution of exaggerated morphology. Although allometric relationships are often treated as stable descriptors of trait architecture, they may vary across biological levels and developmental environments. We quantified weapon allometries of the forceps in the European earwig (*Forficula auricularia*) using a split-brood experiment that manipulated developmental diet and social density. We analysed females, brachylabic males, and macrolabic males as separate phenotypic groups within a hierarchical Bayesian framework that allowed scaling relationships to vary among groups, environments, and maternal families. Forceps length increased with body size in all phenotypes, but most scaling exponents were less than one, indicating predominantly hypoallometric relationships. Females and brachylabic males exhibited indistinguishable allometric slopes across developmental environments. By contrast, macrolabic males represented the principal source of divergence, exhibiting steeper scaling relationships under some conditions and the only evidence of hyperallometry. Environmental effects on scaling exponents were generally weak and largely restricted to macrolabic males reared under poor diet, where sample sizes were limited. Among-family variation in allometric slopes and intercepts was modest, and covariance between these parameters was weak and uncertain. These results indicate that divergence in weapon allometry is concentrated within the exaggerated male morph rather than between the sexes broadly, highlighting how alternative reproductive phenotypes can structure the evolution of trait exaggeration.
+
+\newpage
+
+# Introduction
+
+Static allometry describes how trait size covaries with body size among individuals at the same developmental stage and provides a central framework for understanding the evolution of exaggerated morphology. Sexually selected weapons often exhibit positive allometry, such that larger individuals tend to express disproportionately larger traits [@voje2016; @kodric-brown2006; @bonduriansky2007]. However, hyperallometry is not universal. When traits serve both sexual and viability functions, or when functional and mechanical constraints limit disproportionate investment, isometry or hypoallometry may evolve instead [@bonduriansky2003; @eberhard2018; @kelly2026]. Consequently, scaling relationships reflect how developmental processes, functional performance, and selection interact to generate patterns of trait variation.
+
+Static allometry is typically described by a linear relationship between log-transformed trait size and body size. In this framework, the slope (scaling exponent) describes the strength of covariation between trait size and body size and therefore the degree of size-dependent exaggeration [@pelabon2014; @voje2016]. Differences in scaling exponents among groups indicate that trait exaggeration changes with body size, whereas similar slopes imply a shared relationship between trait size and body size despite differences in average trait expression. Because scaling exponents link developmental variation in body size to variation in trait expression, they provide a powerful means of evaluating how exaggerated traits evolve within and among populations [@bonduriansky2007; @shingleton2013].
+
+Sexual dimorphism is often viewed as the evolutionary divergence of males and females from a shared developmental architecture. However, dimorphism can arise through multiple pathways. Males and females may differ in average trait expression while retaining similar allometric relationships, or divergence may occur through changes in how trait size scales with body size. Recent evidence from the maritime earwig *Anisolabis maritima* demonstrates that females, like males, can exhibit positively allometric forceps, highlighting that weapon exaggeration is not necessarily restricted to males [@matsuzawa2025]. Species expressing alternative male phenotypes provide an opportunity to examine these processes in greater detail because males themselves are partitioned into discrete reproductive forms. In such systems, one male morph may resemble females more closely than other males, raising the possibility that sexual dimorphism is concentrated within a subset of the male population rather than distributed uniformly across all males. Understanding whether alternative male phenotypes differ from females in scaling relationships therefore offers insight into how sexual dimorphism and trait exaggeration evolve from shared developmental programs. Under the developmental threshold model, the major morph arises through activation of a developmental program for exaggerated trait growth when body size exceeds a critical value, whereas the minor morph retains a more "default" morphology produced in the absence of that program [@tomkins2005a; @emlen2007]; this framework provides a mechanistic basis for the classical view of males as exaggerated females [@darwin1871; @bonduriansky2007a] and predicts that the minor morph should resemble females more closely than the major morph in scaling relationships as well as in absolute trait size.
+
+Species expressing alternative reproductive phenotypes provide particularly valuable models for examining the structure of allometry. In these species, males adopt discrete morphs that differ in weapon size, behaviour, and reproductive tactics [@gross1996; @shuster2003; @oliveira2008]. Because morphs share much of their genome and developmental environment, differences in scaling relationships can reveal how exaggeration evolves within a single species. Although alternative male phenotypes have been documented in many taxa, relatively few studies have quantified morph-specific static allometries, and even fewer have examined how developmental environments influence scaling relationships among morphs [@kochensparger2024; @kelly2026].
+
+Environmental conditions can influence both body size and trait expression and may therefore alter static allometries [@emlen1997; @frankino2005; @shingleton2007]. Nutritional stress, for example, can reduce investment in sexually selected structures, whereas social conditions such as rearing density may modify developmental trajectories through competition or social interactions. Environmental effects on scaling exponents would indicate plasticity in the relationship between trait size and body size, whereas similar scaling exponents across environments would imply canalization of allometric relationships [@frankino2005; @shingleton2007; @nijhout2012]. Determining whether developmental environments modify scaling relationships is therefore important for understanding the extent to which trait exaggeration is environmentally sensitive. Complementary structural modelling of the same study system demonstrates that developmental environments influence forceps expression both indirectly through body size and directly through trait-specific developmental pathways, particularly in males [@ozkansubmitted].
+
+Beyond sex, morph, and environment, variation among maternal families can provide insight into the developmental and evolutionary structure of allometry. Families may differ not only in average trait expression but also in the strength of the relationship between trait size and body size. Such variation could arise from genetic differences, maternal effects, or shared developmental conditions. Quantifying among-family variation in allometric slopes therefore offers a means of assessing whether scaling relationships themselves vary among related individuals [@lande1980; @pelabon2014; @hansen2008; @klingenberg2008].
+
+The European earwig (*Forficula auricularia*) provides a powerful system for examining how sexual dimorphism and alternative male phenotypes are structured through allometry. Males express two discrete forceps morphs, commonly referred to as brachylabic and macrolabic males, which differ markedly in weapon size and shape [@simmons1996; @tomkins2005a] (@fig-one). Forceps function both as sexual weapons during male–male interactions and as defensive structures, making them traits with dual functions [@meunier2024; @kamimura2024]. Because these morphs coexist within the same population, earwigs provide an opportunity to determine whether males share a common scaling relationship that differs from females, or whether divergence is concentrated within a particular male morph. Previous studies have documented morph-specific differences in forceps exaggeration, suggesting that alternative male phenotypes may represent distinct allometric trajectories rather than simple variants of a single male form [@simmons1996; @tomkins2005a]. Moreover, recent work on another earwig species revealed positive allometry in female forceps, raising the possibility that sex differences in forceps scaling may be more evolutionarily labile than previously appreciated [@matsuzawa2025]. In this species, the macrolabic morph functions primarily as a sexual weapon whereas the brachylabic morph — which is the more common morph in most populations and is the only morph produced under poor developmental conditions — appears to retain a more female-like morphology consistent with the threshold-model prediction [@tomkins1999; @tomkins2004a; @tomkins2005a].
+
+Here, we quantify static allometries of forceps length in female, brachylabic male, and macrolabic male *F. auricularia* reared under experimentally manipulated diet and density conditions. We first test whether the three phenotypic groups differ in allometric scaling relationships and whether any divergence is consistent across developmental environments. We then assess whether developmental conditions modify scaling exponents within each group and whether allometric relationships vary among maternal families. By integrating sex, morph, environment, and family effects within a hierarchical framework, we evaluate whether weapon allometry is broadly conserved across phenotypic groups or whether divergence is concentrated within particular male morphs.
+
+# Methods
+
+### Study species and experimental design
+
+Adult female earwigs morphologically assignable to the *Forficula auricularia* species complex (*F. auricularia sensu lato*) were collected by hand at night from vegetation in Parc Outremont (Montréal, Québec, Canada) during September and October 2024. The European earwig is now recognized as a complex of closely related lineages that cannot always be distinguished reliably using external morphology alone [@gonzalez-miguens2020]. Because individuals were not genetically assigned to lineage, we refer to them as *F. auricularia sensu lato* throughout. This taxonomic uncertainty should not affect treatment comparisons in the present study because all individuals originated from the same local population and were randomly assigned to experimental treatments, although caution may be warranted when comparing results among studies conducted on genetically characterized lineages.
+
+Females (n = 115) were transported to the laboratory at the Université du Québec à Montréal and housed individually in 90-mm Petri dishes containing moist sand. Each dish was supplied with a cotton-plugged water tube and TetraMin Tropical Flakes (United Pet Group, Germany), and females were assigned unique identification codes. Earwigs were maintained in darkness at 10°C (Percival Scientific, Perry, IA, USA) to simulate overwintering conditions. Dishes were checked daily for egg laying, and food and water were replenished as required. Following oviposition (approximately early December), food and water were removed and dishes were inspected weekly. Beginning in January 2025, dishes were checked daily for hatching. Hatching occurred between 13 and 29 January 2025, and all 115 females successfully produced offspring.
+
+For two weeks following hatching, families were provided with food and water ad libitum. This period allowed nymphs to complete an early moult and attain a size suitable for manual transfer to experimental dishes. To manipulate developmental conditions, we varied both nutritional quality and social density. Diet treatment consisted of either a good-quality diet (100% TetraMin Tropical Flakes) or a poor-quality diet (75% TetraMin Tropical Flakes and 25% non-digestible α-cellulose). Density treatment consisted of one, four, or eight individuals per dish. Offspring from each family were randomly assigned among treatment combinations using a split-brood design to minimize confounding between maternal background and environmental treatment. Experimental dishes were maintained at 20°C and contained a water tube, treatment-specific food, and a refuge constructed from four sections of paper straw. In total, 1,265 dishes were established. Mothers were euthanized by freezing at −20°C after offspring had been assigned to treatments. Dishes were inspected several times per week for mortality and adult emergence, and food and water were replenished as needed.
+
+### Morphological measurements
+
+Once offspring reached adulthood, they were removed from their dish, assigned a unique identification code, and the date of adult emergence was recorded. Pronotum length (a proxy for body size) and forceps length were photographed under a Leica S6D stereomicroscope (Leica Microsystems Inc., Concord, ON, Canada) at 0.68× magnification using Enersight software. Measurements were obtained to the nearest 0.001 mm using Fiji image-analysis software [@schindelin2012] following established procedures [@vanlieshout2009]. Measurements were conducted blind to treatment whenever possible. To assess measurement repeatability, a subset of 30 individuals was measured twice. Intraclass correlation coefficients indicated high repeatability for both pronotum length (ICC = 0.94) and forceps length (ICC = 0.97).
+
+### Data preparation and statistical analyses
+
+All analyses were conducted in R version 4.4.2 [@rcoreteam2025]. Individuals were retained only when the final number of survivors preserved the intended density treatment (low density: one survivor; medium density: at least three survivors; high density: at least six survivors). Individuals lacking sex information were excluded. Final sample sizes for each phenotypic group and developmental environment are provided in Table S1. Pronotum length and forceps length were log-transformed prior to analysis to linearize allometric relationships and reduce heteroscedasticity.
+
+Male morphs were classified using finite mixture modelling implemented in the package *mixsmsn* [@prates2013]. Raw male forceps lengths were modelled as a two-component skew-normal mixture distribution, and males were assigned to the component with the highest posterior probability. This procedure identified the two discrete male morphs traditionally recognized in *F. auricularia*: brachylabic and macrolabic males.
+
+We analysed allometric relationships using a hierarchical Bayesian model fitted with the package *brms* [@burkner2017] and the *cmdstanr* backend. Log-transformed forceps length was modelled as a function of log-transformed pronotum length (body size), phenotypic group, diet, density, and all lower-order and higher-order interactions among these predictors. Phenotypic group comprised three levels: females, brachylabic males, and macrolabic males. Treating females and the two male morphs as equivalent levels of a single factor allowed direct comparisons among all phenotypes without assuming a single male allometric relationship.
+
+Interactions involving body size allowed allometric slopes to vary among phenotypic groups and developmental environments. Terms not involving body size describe differences in model intercepts among groups and environments. Maternal identity was included as a varying intercept and varying slope for body size, allowing maternal families to differ in both average forceps expression and allometric scaling. Rearing-dish identity was additionally included as a varying intercept to account for non-independence among individuals raised in the same dish.
+
+To evaluate whether allometric relationships deviated from linearity, we fitted an alternative model that additionally included a quadratic body-size term and all corresponding interactions. Predictive performance of the linear and quadratic models was compared using approximate leave-one-out cross-validation (LOO) [@vehtari2017].
+
+Weakly informative priors were specified for fixed and random effects. Models were fitted using Hamiltonian Monte Carlo sampling, and convergence was assessed using trace plots, effective sample sizes, and the potential scale reduction statistic [$\hat{R}$; @vehtari2021]. All models showed satisfactory convergence (Table S2).
+
+Condition-specific allometric slopes were estimated from posterior distributions using the function `emtrends()` in the package *emmeans* [@lenth2019package]. Slopes were estimated separately for each combination of phenotypic group, diet treatment, and density treatment. Pairwise contrasts among phenotypic groups and developmental environments were derived from the same posterior distributions. Pairwise contrasts were calculated as the first level minus the second level (e.g., female − macrolabic or good diet − poor diet), such that negative values indicate larger estimates for the second level. We report posterior medians and 95% credible intervals throughout. Inference was based on posterior distributions rather than null-hypothesis significance testing.
+
+# Results
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+vc_all <- VarCorr(mod_all)
+
+fam_intercept_sd  <- vc_all$id_mere$sd["Intercept", "Estimate"]
+fam_intercept_lwr <- vc_all$id_mere$sd["Intercept", "Q2.5"]
+fam_intercept_upr <- vc_all$id_mere$sd["Intercept", "Q97.5"]
+
+fam_slope_sd  <- vc_all$id_mere$sd["logP", "Estimate"]
+fam_slope_lwr <- vc_all$id_mere$sd["logP", "Q2.5"]
+fam_slope_upr <- vc_all$id_mere$sd["logP", "Q97.5"]
+
+cor_df <- as.data.frame(vc_all$id_mere$cor[, , "Intercept"])
+
+fam_cor     <- cor_df["logP", "Estimate"]
+fam_cor_lwr <- cor_df["logP", "Q2.5"]
+fam_cor_upr <- cor_df["logP", "Q97.5"]
+
+resid_sd  <- vc_all$residual__$sd[1, "Estimate"]
+resid_lwr <- vc_all$residual__$sd[1, "Q2.5"]
+resid_upr <- vc_all$residual__$sd[1, "Q97.5"]
+```
+
+```{r}
+#| label: among-family-dish-statistics
+#| echo: false
+#| message: false
+#| warning: false
+
+library(posterior)
+
+# Extract posterior draws from the final model
+mod_all_draws <- posterior::as_draws_df(mod_all)
+
+# Helper function: posterior median and 95% credible interval
+summarise_parameter <- function(variable, draws = mod_all_draws) {
+  
+  if (!variable %in% names(draws)) {
+    stop(
+      paste0(
+        "Parameter '", variable, "' was not found in the model draws."
+      )
+    )
+  }
+  
+  x <- draws[[variable]]
+  
+  list(
+    median = median(x),
+    lower  = unname(quantile(x, 0.025)),
+    upper  = unname(quantile(x, 0.975))
+  )
+}
+
+# Maternal-family varying effects
+fam_intercept_sd <- summarise_parameter(
+  "sd_id_mere__Intercept"
+)
+
+fam_slope_sd <- summarise_parameter(
+  "sd_id_mere__logP"
+)
+
+fam_intercept_slope_cor <- summarise_parameter(
+  "cor_id_mere__Intercept__logP"
+)
+
+# Rearing-dish varying intercept
+dish_intercept_sd <- summarise_parameter(
+  "sd_boite_petri__Intercept"
+)
+
+# Residual standard deviation
+residual_sd <- summarise_parameter(
+  "sigma"
+)
+
+# Formatting helper
+fmt2 <- function(x) {
+  sprintf("%.2f", x)
+}
+```
+
+### Among-family and dish variation
+
+Variation among maternal families was modest but non-zero (Table S3). The posterior median standard deviation of family-level intercepts was `r fmt2(fam_intercept_sd$median)` (95% CrI: `r fmt2(fam_intercept_sd$lower)`–`r fmt2(fam_intercept_sd$upper)`), indicating limited among-family variation in forceps expression after accounting for body size, phenotypic group, diet, and density. The standard deviation of family-level allometric slopes was `r fmt2(fam_slope_sd$median)` (95% CrI: `r fmt2(fam_slope_sd$lower)`–`r fmt2(fam_slope_sd$upper)`), indicating some among-family variation in the relationship between body size and forceps length.
+
+The correlation between family-level intercepts and slopes was negative but highly uncertain (*r* = `r fmt2(fam_intercept_slope_cor$median)`, 95% CrI: `r fmt2(fam_intercept_slope_cor$lower)`–`r fmt2(fam_intercept_slope_cor$upper)`), providing little evidence for a consistent association between average forceps expression and allometric scaling among families. Variation among rearing dishes was small (SD = `r fmt2(dish_intercept_sd$median)`, 95% CrI: `r fmt2(dish_intercept_sd$lower)`–`r fmt2(dish_intercept_sd$upper)`), and residual variation was also low (SD = `r fmt2(residual_sd$median)`, 95% CrI: `r fmt2(residual_sd$lower)`–`r fmt2(residual_sd$upper)`).
+Females exhibited a continuous distribution of weapon sizes across body sizes (pronotum length: mean ± SD = `r myround(summary.table.2$mean_pronotum[summary.table.2$group3 == "female"], 2)` ± `r myround(summary.table.2$sd_pronotum[summary.table.2$group3 == "female"], 2)` mm; forceps length: mean ± SD = `r myround(summary.table.2$mean_forceps[summary.table.2$group3 == "female"], 2)` ± `r myround(summary.table.2$sd_forceps[summary.table.2$group3 == "female"], 2)` mm, n = `r summary.table.2$n[summary.table.2$group3 == "female"]`). Males formed two discrete clusters corresponding to brachylabic (pronotum length: mean ± SD = `r myround(summary.table.2$mean_pronotum[summary.table.2$group3 == "brachylabic"], 2)` ± `r myround(summary.table.2$sd_pronotum[summary.table.2$group3 == "brachylabic"], 2)` mm; forceps length: mean ± SD = `r myround(summary.table.2$mean_forceps[summary.table.2$group3 == "brachylabic"], 2)` ± `r myround(summary.table.2$sd_forceps[summary.table.2$group3 == "brachylabic"], 2)` mm, n = `r summary.table.2$n[summary.table.2$group3 == "brachylabic"]`) and macrolabic morphs (pronotum length: mean ± SD = `r myround(summary.table.2$mean_pronotum[summary.table.2$group3 == "macrolabic"], 2)` ± `r myround(summary.table.2$sd_pronotum[summary.table.2$group3 == "macrolabic"], 2)` mm; forceps length: mean ± SD = `r myround(summary.table.2$mean_forceps[summary.table.2$group3 == "macrolabic"], 2)` ± `r myround(summary.table.2$sd_forceps[summary.table.2$group3 == "macrolabic"], 2)` mm, n = `r summary.table.2$n[summary.table.2$group3 == "macrolabic"]`), with overlap in body size but clear separation in forceps length (@fig-two).
+
+### Differences among females and male morphs
+
+Forceps length increased with pronotum length across all phenotypic groups, but most estimated allometric slopes were less than one, indicating predominantly hypoallometric scaling relationships (@fig-three; Table S5; Figure S1). Treating females, brachylabic males, and macrolabic males as three phenotypic groups revealed broadly similar hypoallometric scaling relationships across most developmental environments. Under good diet and low density, estimated slopes were `r myround(slope_table$logP.trend[slope_table$group3 == "female" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)` (95% CrI: `r myround(slope_table$lower.HPD[slope_table$group3 == "female" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)`–`r myround(slope_table$upper.HPD[slope_table$group3 == "female" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)`) in females, `r myround(slope_table$logP.trend[slope_table$group3 == "brachylabic" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)` (95% CrI: `r myround(slope_table$lower.HPD[slope_table$group3 == "brachylabic" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)`–`r myround(slope_table$upper.HPD[slope_table$group3 == "brachylabic" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)`) in brachylabic males, and `r myround(slope_table$logP.trend[slope_table$group3 == "macrolabic" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)` (95% CrI: `r myround(slope_table$lower.HPD[slope_table$group3 == "macrolabic" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)`–`r myround(slope_table$upper.HPD[slope_table$group3 == "macrolabic" & slope_table$diet == "GOOD" & slope_table$density == "1"],2)`) in macrolabic males. Pairwise differences among groups were generally small and uncertain, with contrasts overlapping zero across most environments (Table S6).
+
+A quadratic model had somewhat better expected out-of-sample predictive performance than the linear model (ΔELPD = `r myround(abs(loo_table$elpd_diff[loo_table$Model == "Linear model"]),2)`, SE = `r myround(loo_table$se_diff[loo_table$Model == "Linear model"],2)`; Table S4), indicating some curvature in the relationship between body size and forceps length. However, predictions from the quadratic model supported the same qualitative conclusions as the linear analysis (Figure S2). Females and brachylabic males exhibited broadly similar relationships across developmental environments, whereas the greatest divergence occurred among macrolabic males. In particular, the poor-diet, medium-density macrolabic group retained a strongly increasing relationship, whereas relationships under poor diet at low and high density remained weak and highly uncertain. Curvature in the macrolabic male relationships was concentrated near the extremes of the observed body-size range, where predictions were influenced by relatively few individuals. Accordingly, these edge effects should be interpreted cautiously and do not necessarily indicate strong curvature across the central portion of the body-size distribution. We therefore retained the linear model as the primary inferential model because it provides directly interpretable condition-specific allometric exponents.
+
+Across the full set of developmental environments, there was little evidence that females and brachylabic males differed consistently in allometric slope (Table S6). The contrast between females and brachylabic males overlapped zero in every diet-by-density combination examined. Macrolabic males likewise exhibited slopes similar to those of females and brachylabic males under most environmental conditions. The clearest exception occurred under poor diet at medium density, where macrolabic males exhibited a substantially steeper allometric slope (`r myround(slope_table$logP.trend[slope_table$group3 == "macrolabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`, 95% CrI: `r myround(slope_table$lower.HPD[slope_table$group3 == "macrolabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`–`r myround(slope_table$upper.HPD[slope_table$group3 == "macrolabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`) than either females (`r myround(slope_table$logP.trend[slope_table$group3 == "female" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`, 95% CrI: `r myround(slope_table$lower.HPD[slope_table$group3 == "female" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`–`r myround(slope_table$upper.HPD[slope_table$group3 == "female" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`) or brachylabic males (`r myround(slope_table$logP.trend[slope_table$group3 == "brachylabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`, 95% CrI: `r myround(slope_table$lower.HPD[slope_table$group3 == "brachylabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`–`r myround(slope_table$upper.HPD[slope_table$group3 == "brachylabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`). Pairwise contrasts confirmed steeper slopes in macrolabic males than in females and brachylabic males under this environment (Table S6). However, this result should be interpreted cautiously because poor-diet macrolabic males were rare, including only 18 individuals at medium density (Table S1).
+
+Females and brachylabic males exhibited hypoallometric scaling under all developmental environments examined. Macrolabic males also exhibited hypoallometric scaling in five of the six environments. The sole exception occurred under poor diet and medium density, where the estimated slope exceeded one (`r myround(slope_table$logP.trend[slope_table$group3 == "macrolabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`, 95% CrI: `r myround(slope_table$lower.HPD[slope_table$group3 == "macrolabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`–`r myround(slope_table$upper.HPD[slope_table$group3 == "macrolabic" & slope_table$diet == "POOR" & slope_table$density == "4"],2)`), indicating hyperallometric scaling. Given the low sample sizes for poor-diet macrolabic males (Table S1), this environment-specific hyperallometry should be viewed as suggestive rather than definitive.
+
+### Environmental effects on scaling
+
+Environmental effects on allometric slopes were generally weak. In females, diet contrasts overlapped zero at all densities (@fig-three; Table S6), indicating little evidence that nutritional conditions altered scaling relationships. Similarly, diet effects on brachylabic male slopes were small and uncertain across all density treatments.
+
+Evidence for environmental modulation of allometry was concentrated in macrolabic males, but these estimates should be interpreted cautiously because poor-diet macrolabic males were uncommon at low density (n = 3), medium density (n = 18), and high density (n = 13) (Table S1). Under medium density, macrolabic males exhibited steeper slopes under poor diet than under good diet (good–poor contrast = -0.82, 95% CrI: -1.33 to -0.31). By contrast, diet contrasts overlapped zero at low and high densities (Table S6).
+
+Density effects were likewise weak for females and brachylabic males, with all density contrasts overlapping zero (@fig-three; Table S6). In macrolabic males reared on a poor diet, however, slopes differed among density treatments. Specifically, slopes under medium density exceeded those observed under low density (difference = -1.28, 95% CrI: -2.31 to -0.28) and high density (difference = 1.22, 95% CrI: 0.36 to 2.05). Thus, environmental effects on allometric scaling were not expressed broadly across groups but were largely restricted to macrolabic males under poor diet and medium-density conditions, where estimates are based on limited sample sizes.
+
+### Among-family variation
+
+Variation among maternal families was modest but non-zero (Table S3). The standard deviation of family-level intercepts was `r myround(fam_intercept_sd,3)` (95% CrI: `r myround(fam_intercept_lwr,3)` – `r myround(fam_intercept_upr,3)`), indicating limited among-family variation in forceps expression after accounting for body size, phenotypic group, diet, and density. The standard deviation of family-level allometric slopes was `r myround(fam_slope_sd,3)` (95% CrI: `r myround(fam_slope_lwr,3)`– `r myround(fam_slope_upr,3)`), indicating some among-family variation in the relationship between body size and forceps length.
+
+The correlation between family-level intercepts and slopes was negative but highly uncertain (*r* = `r myround(fam_cor,2)`, 95% CrI: `r myround(fam_cor_lwr,2)`–`r myround(fam_cor_upr,2)`), providing little evidence for a consistent association between overall forceps expression and allometric scaling among families. Variation among rearing dishes was small (SD = `r myround(dish_intercept_sd,3)`, 95% CrI: `r myround(dish_intercept_lwr,3)`–`r myround(dish_intercept_upr,3)`), and residual variation was also low (SD = `r myround(resid_sd,3)`, 95% CrI: `r myround(resid_lwr,3)`–`r myround(resid_upr,3)`).
+
+# Discussion
+
+Static allometries are often treated as stable descriptors of morphological architecture [@huxley1932; @gould1966; @voje2016], yet the extent to which scaling relationships vary among phenotypes and environments remains an important question in evolutionary biology [@pelabon2014; @voje2016]. By analysing females, brachylabic males, and macrolabic males as separate phenotypic groups, we show that forceps allometry in the European earwig is characterised primarily by similarity rather than divergence. Across most developmental environments, females and brachylabic males exhibited nearly indistinguishable hypoallometric scaling relationships, whereas macrolabic males represented the principal source of deviation from this pattern. Environmental effects on scaling exponents were generally weak, and evidence for environmentally mediated divergence was concentrated in a small subset of conditions. Together, these findings suggest that weapon exaggeration in *F. auricularia* is associated less with broad sex differences in scaling than with the emergence of a discrete exaggerated male phenotype.
+
+Sexual dimorphism is classically framed as the divergence of males from a shared female "ground plan," with males viewed as modified females and exaggeration of male traits interpreted as departures from a default developmental programme [@darwin1871; @bonduriansky2007a]. Under this view, alternative male morphs might be expected to diverge from females in proportion to their degree of exaggeration, with the more exaggerated morph showing the greatest departure from the female scaling relationship. Our data are consistent with this prediction for only one morph: macrolabic males depart from the female scaling relationship, whereas brachylabic males do not. This asymmetric divergence is reminiscent of the developmental threshold model for male dimorphism, in which activation of the developmental program responsible for exaggerated trait expression produces only the major morph, while the minor morph retains a more "default" morphology that resembles females [@tomkins2005a; @emlen2007]. Mechanistic support for this interpretation comes from horned beetles, in which minor males are produced by failure to initiate horn-growth pathways and consequently express traits that are morphologically more similar to those of females than to those of major males [@emlen2007]. Comparative evidence from a clade of neotropical harvestmen shows that sexual dimorphism and male dimorphism frequently evolve in concert, with minor-male weapon expression more closely tracking female than major-male expression across species [@buzatto2014]. Our results suggest that *F. auricularia* may represent an earwig analogue of this pattern: brachylabic males occupy a position that is allometrically closer to females than to macrolabic males, suggesting that the evolution of male dimorphism may represent a more important source of morphological diversification in this species than sexual dimorphism alone.
+
+This pattern is not universal across male-dimorphic systems. In the Wellington tree wētā (*Hemideina crassidens*), morph-specific weapon allometries did not align closely with the degree of weapon exaggeration or the presumed mating role of each male morph [@kelly2026]. In that species, the conventional fighter morph did not exhibit steeper weapon allometry than the alternative morphs, suggesting that morph-specific scaling relationships can evolve independently of obvious differences in reproductive tactic or weapon expression. By comparison, the present study reveals a more intuitive pattern in which the exaggerated macrolabic morph is also the phenotype most differentiated allometrically. Together, these studies indicate that alternative reproductive phenotypes do not follow a single evolutionary route to weapon exaggeration: in some systems, morph divergence is associated with pronounced differences in scaling relationships, whereas in others morphs differ substantially in weapon expression despite retaining broadly similar allometries.
+
+The predominance of hypoallometry is itself notable. Sexually selected weapons are frequently characterised by positive or hyperallometric scaling [@kodric-brown2006; @bonduriansky2007], yet forceps length increased less than proportionally with body size in nearly all environments and phenotypic groups. This result is consistent with growing recognition that exaggerated sexual traits need not exhibit hyperallometric scaling [@bonduriansky2003; @eberhard2018; @kelly2026] and aligns with recent comparative work in beetles showing that allometric slope and intercept can evolve semi-independently in response to sexual selection [@painting2024]. Earwig forceps serve multiple functions, including male–male competition, predator defence, prey handling, and courtship interactions [@kamimura2014; @meunier2024]. Such multifunctionality may constrain disproportionate investment in a single function and favour more moderate scaling relationships than those observed in structures used exclusively as sexual weapons. Importantly, a recent study in *F. auricularia* itself found no association between male forceps length and six behavioural or physiological traits commonly assumed to indicate male quality [@blackwell2024], raising the possibility that forceps function — and therefore the selection regime acting on forceps scaling — may be more diffuse than the classical weapon model assumes. The widespread occurrence of hypoallometry across females and both male morphs further suggests that similar functional or developmental constraints operate throughout the species despite substantial differences in absolute forceps expression. Indeed, recent work on a confamilial earwig, the maritime earwig *Anisolabis maritima*, shows that female forceps in that species exhibit positive allometry [@matsuzawa2025], indicating that the scaling regime of female forceps is not fixed across Dermaptera and that *F. auricularia* may represent a case in which female forceps scaling has become decoupled from selection on weapon expression.
+
+Environmental effects on scaling relationships were generally limited. This finding is noteworthy because sexually selected traits are often predicted to exhibit strong condition dependence and heightened sensitivity to developmental environments [@rowe1996; @cotton2004; @bonduriansky2007]. Females and brachylabic males exhibited little evidence of environmentally induced variation in scaling exponents, and most contrasts among developmental environments overlapped zero. Evidence for environmental sensitivity was concentrated in macrolabic males, particularly under poor diet and medium-density conditions, where estimated slopes exceeded one and were steeper than those of the other phenotypic groups. However, this result should be interpreted cautiously because macrolabic males were uncommon under poor-diet conditions, resulting in small sample sizes and substantial uncertainty. Although the elevated slopes observed in some macrolabic male environments are *suggestive* of heightened condition dependence, we emphasise that this inference rests on small sample sizes and a single diet × density cell; we therefore treat it as a hypothesis for future work rather than a robust conclusion. The overall pattern is consistent with recent evidence that selection on weapon allometry in the wild can act on the intercept rather than the slope of the scaling relationship [@emberts2023], implying that developmental environments may influence weapon size primarily through effects on growth and average trait expression rather than through large changes in the allometric relationship itself.
+
+The similarity of females and brachylabic males also provides insight into the developmental basis of morph differentiation. Previous work has shown that morph expression in *F. auricularia* is influenced by both genetic and environmental factors [@tomkins1999], and that morph frequencies shift with population density over short geographic distances, consistent with a threshold trait under conditional selection [@tomkins2004a]. If morph determination were governed solely by body size, one would expect a relatively sharp transition between phenotypes. Instead, substantial overlap in body size occurs between brachylabic and macrolabic males in our sample. Our results suggest that morph differentiation is not accompanied by wholesale restructuring of allometric relationships. Rather, the exaggerated phenotype appears to emerge against a background of generally conserved scaling relationships, consistent with developmental threshold models in which discrete morph expression arises through changes in developmental pathways affecting weapon growth while the broader relationship between body size and trait size remains largely intact [@tomkins2005a; @emlen2007]. More generally, Emlen and colleagues [@emlen2000; @emlen2007] argued that exaggerated morphologies evolve through modifications of developmental reaction norms linking trait size to body size, often mediated by threshold-like switches. The concentration of allometric divergence within macrolabic males is consistent with this view and suggests that forceps exaggeration in *F. auricularia* emerges through modification of a shared developmental architecture rather than through wholesale restructuring of forceps allometry across all males.
+
+Variation among maternal families was modest but non-zero, indicating that scaling relationships differ slightly among related individuals. Family-level variation in slopes exceeded variation in intercepts, suggesting that the strength of trait–body size covariation varies among maternal lineages. However, the correlation between family-level intercepts and slopes was highly uncertain, providing little evidence that families producing relatively larger forceps also exhibit systematically steeper allometries. Although family effects cannot be partitioned into genetic and shared environmental components in the present study, the existence of among-family variation suggests that scaling relationships are not completely fixed and may provide a substrate for evolutionary change [@lande1980; @pelabon2014].
+
+More broadly, our results support a view of static allometry as a hierarchical phenotype in which patterns of trait–body size covariation emerge from multiple sources of variation operating at different biological levels. This perspective aligns with the argument that allometries are best viewed as evolving developmental reaction norms rather than immutable constraints on morphological evolution [@emlen2000]. Most of the observed structure occurred among phenotypic groups rather than among developmental environments or maternal families. In particular, the primary distinction was not between males and females but between the exaggerated macrolabic morph and all other phenotypes. If this pattern generalises to other male-dimorphic systems, then the standard practice of pooling male morphs in studies of weapon allometry — common in the literature [e.g. @kelly2005a; see also @kochensparger2024] — may obscure real structure in scaling relationships and underestimate the diversity of evolutionary pathways leading to weapon exaggeration. Our findings underscore the need to consider alternative reproductive phenotypes explicitly when studying the allometric basis of sexual dimorphism and indicate that, in at least some species, substantial evolutionary divergence may occur within males themselves rather than between the sexes. We therefore suggest that alternative reproductive phenotypes may represent distinct allometric variants whose evolutionary trajectories are only revealed when they are analysed as separate categories at the same hierarchical level as females.
+
+
+# Data availability
+
+Data are available through the OSF repository at https://osf.io/m7c53/overview?view_only=ce50e42b29284cbe8164e768ecb9c2b1.
+
+# Funding
+
+The study was funded by a Discovery Grant from the Natural Sciences and Engineering Research Council of Canada (NSERC) to CDK.
+
+# Conflict of Interest
+
+We declare no conflicts of interest.
+
+# Acknowledgements
+
+We thank Andreanne Nault for her help in the lab.
+
+\newpage
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
+
+\newpage
+
+## Figures
+
+::: {#fig-one fig-cap="Visual comparison of forceps size and shape across sexes and male morphs: (a) female, (b) brachylabic male, and (c) macrolabic male. Macrolabic males display exaggerated forceps consistent with positive allometry, while brachylabic males and females exhibit relatively reduced forceps. Photographs are of adults from the experimental population (Parc Outremont, Montréal). Scale bars = 1 mm."}
+![](figure_1.jpg){width=8.67cm height=16.55cm}
+:::
+
+\newpage
+
+::: {#fig-two fig-cap="Relationship between pronotum length (body size) and forceps length in female, brachylabic male, and macrolabic male Forficula auricularia reared under two diet treatments (good and poor) and three density treatments (low, medium, and high). Points represent individual adults. Rows correspond to phenotypic groups and columns correspond to density treatments. Colours indicate developmental diet. Density distributions of forceps length for each phenotypic group are shown in the right-hand panels. Females exhibited a continuous distribution of forceps sizes, whereas males formed two discrete morphs that overlapped in body size but differed markedly in forceps length. Macrolabic males possessed substantially longer forceps than brachylabic males across the observed range of body sizes. Sample sizes for each diet-by-density combination are provided in Table S1."}
+![](figure_2.jpg)
+:::
+
+\newpage
+
+::: {#fig-three fig-cap="Posterior median allometric slopes (β) and 95% credible intervals describing the relationship between forceps length and pronotum length in females, brachylabic males, and macrolabic males across diet and density treatments. Slope estimates were derived from a single Bayesian mixed-effects model fitted to all individuals, with phenotypic group, diet, density, and their interactions with body size included as fixed effects. The vertical dashed line indicates isometry (β = 1). Values greater than one indicate hyperallometry, whereas values less than one indicate hypoallometry."}
+![](figure_3.jpg)
+:::
+

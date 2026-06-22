@@ -180,7 +180,7 @@ summary.table.2 <- dat.morphs %>%
 
 formula_all <- bf(
   logF ~ logP * group3 * diet * density +
-    (1 + logP | id_mere)
+    (1 + logP | id_mere) + (1 | boite_petri)
 )
 
 priors_all <- c(
@@ -191,18 +191,18 @@ priors_all <- c(
   prior(lkj(2), class = "cor")
 )
 
-# mod_all <- brm(
-#   formula = formula_all,
-#   data    = dat.morphs,
-#   family  = gaussian(),
-#   prior   = priors_all,
-#   chains  = 4,
-#   cores   = 4,
-#   iter    = 4000,
-#   backend = "cmdstanr",
-#   file    = "data/processed/mod_all.Rds",
-#   control = list(adapt_delta = 0.97)
-# )
+mod_all <- brm(
+  formula = formula_all,
+  data    = dat.morphs,
+  family  = gaussian(),
+  prior   = priors_all,
+  chains  = 4,
+  cores   = 4,
+  iter    = 4000,
+  backend = "cmdstanr",
+  file    = "data/processed/mod_all.Rds",
+  control = list(adapt_delta = 0.97)
+)
 
 mod_all <- readRDS(file = "data/processed/mod_all.Rds")
 
@@ -218,23 +218,23 @@ conditional_effects(mod_all)
 formula_all_quad <- bf(
   logF ~ logP * group3 * diet * density +
     I(logP^2) * group3 * diet * density +
-    (1 + logP | id_mere)
+    (1 + logP | id_mere) + (1 | boite_petri)
 )
 
 priors_all_quad <- priors_all
 
-# mod_all_quad <- brm(
-#   formula = formula_all_quad,
-#   data    = dat.morphs,
-#   family  = gaussian(),
-#   prior   = priors_all_quad,
-#   backend = "cmdstanr",
-#   chains  = 4,
-#   cores   = 4,
-#   iter    = 4000,
-#   file    = "data/processed/mod_all_quad.Rds",
-#   control = list(adapt_delta = 0.97)
-# )
+mod_all_quad <- brm(
+  formula = formula_all_quad,
+  data    = dat.morphs,
+  family  = gaussian(),
+  prior   = priors_all_quad,
+  backend = "cmdstanr",
+  chains  = 4,
+  cores   = 4,
+  iter    = 4000,
+  file    = "data/processed/mod_all_quad.Rds",
+  control = list(adapt_delta = 0.97)
+)
 
 mod_all_quad <- readRDS(file = "data/processed/mod_all_quad.Rds")
 
@@ -337,6 +337,8 @@ raw_data <- dat.morphs %>%
 
 dat.morphs %>%
   count(group3, diet, density)
+
+
 
 ## ---- end
 
@@ -613,6 +615,392 @@ ggsave(
   height = 6,
   dpi = 300
 )
+
+
+#----------------------------------------------------------
+# Linear versus quadratic allometry predictions
+#----------------------------------------------------------
+
+stopifnot(
+  inherits(mod_all, "brmsfit"),
+  inherits(mod_all_quad, "brmsfit")
+)
+
+#----------------------------------------------------------
+# 1. Create a common prediction grid
+#
+# Predictions are restricted to the observed body-size
+# range within each phenotype × diet × density combination.
+#----------------------------------------------------------
+
+prediction_grid <- dat.morphs %>%
+  filter(
+    !is.na(logP),
+    !is.na(group3),
+    !is.na(diet),
+    !is.na(density)
+  ) %>%
+  group_by(
+    group3,
+    diet,
+    density
+  ) %>%
+  summarise(
+    logP_min = min(logP),
+    logP_max = max(logP),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    logP = map2(
+      logP_min,
+      logP_max,
+      ~ seq(
+        from = .x,
+        to = .y,
+        length.out = 100
+      )
+    )
+  ) %>%
+  select(
+    -logP_min,
+    -logP_max
+  ) %>%
+  unnest(logP) %>%
+  mutate(
+    grid_id = row_number()
+  )
+
+# Add valid grouping-factor values for compatibility with
+# the fitted brms models. These values are ignored because
+# re_formula = NA requests population-level predictions.
+
+reference_mother <- dat.morphs %>%
+  filter(!is.na(id_mere)) %>%
+  slice(1) %>%
+  pull(id_mere)
+
+reference_dish <- dat.morphs %>%
+  filter(!is.na(boite_petri)) %>%
+  slice(1) %>%
+  pull(boite_petri)
+
+prediction_grid <- prediction_grid %>%
+  mutate(
+    id_mere = reference_mother,
+    boite_petri = reference_dish
+  )
+
+#----------------------------------------------------------
+# 2. Function for population-level posterior predictions
+#----------------------------------------------------------
+
+get_population_predictions <- function(
+    fit,
+    newdata,
+    model_label,
+    ndraws = 2000
+) {
+  
+  epred <- posterior_epred(
+    fit,
+    newdata = newdata,
+    re_formula = NA,
+    ndraws = ndraws
+  )
+  
+  newdata %>%
+    mutate(
+      logF_median = apply(
+        epred,
+        2,
+        median
+      ),
+      
+      logF_lower = apply(
+        epred,
+        2,
+        quantile,
+        probs = 0.025
+      ),
+      
+      logF_upper = apply(
+        epred,
+        2,
+        quantile,
+        probs = 0.975
+      ),
+      
+      Model = model_label
+    )
+}
+
+#----------------------------------------------------------
+# 3. Generate predictions from both models
+#----------------------------------------------------------
+
+set.seed(123)
+
+linear_predictions <- get_population_predictions(
+  fit = mod_all,
+  newdata = prediction_grid,
+  model_label = "Linear"
+)
+
+set.seed(123)
+
+quadratic_predictions <- get_population_predictions(
+  fit = mod_all_quad,
+  newdata = prediction_grid,
+  model_label = "Quadratic"
+)
+
+#----------------------------------------------------------
+# 4. Helper for plotting labels
+#----------------------------------------------------------
+
+format_plot_variables <- function(data) {
+  
+  data %>%
+    mutate(
+      Phenotype = recode(
+        as.character(group3),
+        "female" = "Female",
+        "brachylabic" = "Brachylabic male",
+        "macrolabic" = "Macrolabic male"
+      ),
+      
+      Diet = recode(
+        as.character(diet),
+        "GOOD" = "Good",
+        "POOR" = "Poor"
+      ),
+      
+      Density = recode(
+        as.character(density),
+        "1" = "Low",
+        "4" = "Medium",
+        "8" = "High"
+      ),
+      
+      Phenotype = factor(
+        Phenotype,
+        levels = c(
+          "Female",
+          "Brachylabic male",
+          "Macrolabic male"
+        )
+      ),
+      
+      Diet = factor(
+        Diet,
+        levels = c(
+          "Good",
+          "Poor"
+        )
+      ),
+      
+      Density = factor(
+        Density,
+        levels = c(
+          "Low",
+          "Medium",
+          "High"
+        )
+      )
+    )
+}
+
+#----------------------------------------------------------
+# 5. Combine, format, and back-transform predictions
+#----------------------------------------------------------
+
+model_predictions <- bind_rows(
+  linear_predictions,
+  quadratic_predictions
+) %>%
+  format_plot_variables() %>%
+  mutate(
+    Model = factor(
+      Model,
+      levels = c(
+        "Linear",
+        "Quadratic"
+      )
+    ),
+    
+    pronotum_predicted = exp(logP),
+    forceps_median = exp(logF_median),
+    forceps_lower = exp(logF_lower),
+    forceps_upper = exp(logF_upper)
+  )
+
+linear_plot_data <- model_predictions %>%
+  filter(Model == "Linear")
+
+quadratic_plot_data <- model_predictions %>%
+  filter(Model == "Quadratic")
+
+#----------------------------------------------------------
+# 6. Prepare observed data
+#----------------------------------------------------------
+
+observed_plot_data <- dat.morphs %>%
+  filter(
+    !is.na(logP),
+    !is.na(logF),
+    !is.na(group3),
+    !is.na(diet),
+    !is.na(density)
+  ) %>%
+  format_plot_variables() %>%
+  mutate(
+    pronotum_observed = exp(logP),
+    forceps_observed = exp(logF)
+  )
+
+# Confirm that the required plotting variables exist
+stopifnot(
+  all(
+    c(
+      "pronotum_predicted",
+      "forceps_median",
+      "forceps_lower",
+      "forceps_upper",
+      "Phenotype",
+      "Diet",
+      "Density"
+    ) %in% names(quadratic_plot_data)
+  )
+)
+
+#----------------------------------------------------------
+# 7. Plot quadratic predictions with linear predictions
+#    overlaid as thin grey lines
+#----------------------------------------------------------
+
+
+figure_s_quadratic <- ggplot() +
+  
+  # Observed individuals
+  geom_point(
+    data = observed_plot_data,
+    aes(
+      x = pronotum_observed,
+      y = forceps_observed,
+      colour = Diet
+    ),
+    alpha = 0.18,
+    size = 0.7
+  ) +
+  
+  # Credible intervals from the quadratic model
+  geom_ribbon(
+    data = quadratic_plot_data,
+    aes(
+      x = pronotum_predicted,
+      ymin = forceps_lower,
+      ymax = forceps_upper,
+      fill = Diet,
+      group = Diet
+    ),
+    alpha = 0.18,
+    colour = NA
+  ) +
+  
+  # Median predictions from the linear model
+  geom_line(
+    data = linear_plot_data,
+    aes(
+      x = pronotum_predicted,
+      y = forceps_median,
+      group = Diet,
+      linetype = Model
+    ),
+    colour = "grey30",
+    linewidth = 0.65
+  ) +
+  
+  # Median predictions from the quadratic model
+  geom_line(
+    data = quadratic_plot_data,
+    aes(
+      x = pronotum_predicted,
+      y = forceps_median,
+      colour = Diet,
+      group = Diet,
+      linetype = Model
+    ),
+    linewidth = 1
+  ) +
+  
+  facet_grid(
+    rows = vars(Phenotype),
+    cols = vars(Density),
+    scales = "free_y"
+  ) +
+  
+  scale_x_log10() +
+  scale_y_log10() +
+  
+  scale_linetype_manual(
+    name = "Model",
+    values = c(
+      "Linear" = "dotdash",
+      "Quadratic" = "solid"
+    ),
+    labels = c(
+      "Linear model",
+      "Quadratic model"
+    )
+  ) +
+  
+  labs(
+    x = "Pronotum length (mm)",
+    y = "Forceps length (mm)",
+    colour = "Diet",
+    fill = "Diet"
+  ) +
+  
+  guides(
+    fill = "none",
+    
+    colour = guide_legend(
+      order = 1,
+      override.aes = list(
+        alpha = 1,
+        linewidth = 1
+      )
+    ),
+    
+    linetype = guide_legend(
+      order = 2,
+      override.aes = list(
+        colour = c("grey30", "black"),
+        linewidth = c(0.65, 1)
+      )
+    )
+  ) +
+  
+  theme_classic() +
+  
+  theme(
+    legend.position = "top",
+    legend.box = "horizontal",
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold"),
+    axis.title = element_text(face = "bold")
+  )
+
+figure_s_quadratic
+
+ggsave(
+  filename = "figure_S2.jpg",
+  plot = figure_s_quadratic,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
 
 
 
