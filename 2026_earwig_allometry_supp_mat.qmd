@@ -226,7 +226,7 @@ flextable(table_s4) %>%
 
 \newpage
 
-**Table S5.** Pairwise contrasts among phenotypic groups in allometric slope within each diet and density treatment. Contrasts were estimated from the unified three-group Bayesian allometry model using posterior distributions of condition-specific slopes. Values are posterior medians and 95% credible intervals.
+**Table S5.** Pairwise contrasts among phenotypic groups in allometric slope within each diet and density treatment. Contrasts were estimated from the unified three-group Bayesian allometry model using posterior distributions of condition-specific slopes. Contrasts are reported as the first level minus the second level; negative values therefore indicate larger slope estimates for the second level. Values are posterior medians and 95% credible intervals. 
 ```{r}
 #| echo: false
 #| message: false

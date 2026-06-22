@@ -362,14 +362,12 @@ library(ggrepel)
 density.labs <- c("Low", "Medium","High")
 names(density.labs) <- c("1", "4", "8")
 
-sex.labs <- c("Females", "Males")
-names(sex.labs) <- c("female", "male")
+sex.labs <- c("Females", "Brachylabic males", "Macrolabic males")
+names(sex.labs) <- c("female", "brachylabic", "macrolabic")
 
-forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label=id_mere,shape=interaction(morph,diet), colour=interaction(morph,diet))) +
-  geom_point(size=2,alpha=0.7) +
-  geom_hline(data = dat.morphs.2 %>% filter(sex == "male"),
-             aes(yintercept = 4.725), colour="grey", linetype="dashed") +
-  facet_grid(sex~density,labeller = labeller(density = density.labs, sex = sex.labs)) +
+forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label=id_mere,colour=diet)) +
+  geom_point(size=3,alpha=0.3, stroke=NA) +
+  facet_grid(group3~density,labeller = labeller(density = density.labs, group3 = sex.labs)) +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
   theme(strip.text.y = element_text(size = 14)) +
@@ -379,28 +377,15 @@ forceps.body.plot.both <- ggplot(dat.morphs.2, aes(x=pronotum, y=forceps_L,label
   theme(axis.text.x = element_text(size=14)) +
   theme(axis.text.y = element_text(size=14)) +
   scale_y_continuous(labels = label_number(accuracy = 0.1)) +
-  scale_colour_manual("",values=c("black", "black", "black", "red", "red","black"), 
+  scale_colour_manual("Diet",values=c("black", "red"), 
                       labels = c(
-                        "female.POOR" = "Female - Poor diet",
-                        "female.GOOD" = "Female - Good diet",
-                        "brachylabic.POOR" = "Brachylabic male - Poor diet",
-                        "brachylabic.GOOD" = "Brachylabic male - Good diet",
-                        "macrolabic.POOR" = "Macrolabic male - Poor diet",
-                        "macrolabic.GOOD"= "Macrolabic male - Good diet"),
-                      limits = c("female.POOR","female.GOOD","brachylabic.POOR", "brachylabic.GOOD", "macrolabic.POOR", "macrolabic.GOOD")) +
-  scale_shape_manual("",values=c(16,1,16,16,1,1), 
-                     labels = c(
-                       "female.POOR" = "Female - Poor diet",
-                       "female.GOOD" = "Female - Good diet",
-                       "brachylabic.POOR" = "Brachylabic male - Poor diet",
-                       "brachylabic.GOOD" = "Brachylabic male - Good diet",
-                       "macrolabic.POOR" = "Macrolabic male - Poor diet",
-                       "macrolabic.GOOD"= "Macrolabic male - Good diet"),
-                     limits = c("female.POOR","female.GOOD","brachylabic.POOR", "brachylabic.GOOD", "macrolabic.POOR", "macrolabic.GOOD")) +
+                        "Poor", "Good")) +
   xlab("Pronotum length (mm)") +
   ylab("Forceps length (mm)")
 
-figure_2 <- forceps.body.plot.both + geom_ysidedensity(aes(x=after_stat(density),group=sex, colour="black")) +
+figure_2 <- forceps.body.plot.both + geom_ysidedensity(aes(x = after_stat(density),
+                                                           group = group3),
+                                                       colour = "black") +
   ggside(collapse="y") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
