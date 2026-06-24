@@ -116,7 +116,6 @@ Weakly informative priors were specified as normal(0, 1) for fixed-effect coeffi
 
 Condition-specific allometric slopes were estimated from the posterior distribution of the linear model using the function `emtrends()` in the package *emmeans* [@lenth2019package]. Slopes were estimated separately for each combination of phenotypic group, diet treatment, and density treatment. Pairwise contrasts among phenotypic groups, diet treatments, and density treatments were derived from the same posterior distributions. Contrasts were calculated as the first level minus the second level—for example, female minus macrolabic male, good minus poor diet, or low minus medium density—such that negative values indicate a larger slope estimate for the second level. We report posterior medians and 95% credible intervals throughout. Inference was based on posterior distributions rather than null-hypothesis significance testing.
 
-
 # Results
 
 ```{r}
