@@ -157,7 +157,34 @@ group_slope_contrasts <- pairs(emtrends(mod_all, ~ group3 | diet * density, var 
 
 # 5.3 Environmental plasticity (slope differences)
 diet_slope_contrasts <- pairs(emtrends(mod_all, ~ diet | group3 * density, var = "logP"))
+
+# Convert emtrends object to a data frame for the Quarto document
+diet_contrast_table <- as.data.frame(diet_slope_contrasts)
+# Rename columns to match .qmd expectations
+if("estimate" %in% colnames(diet_contrast_table)) {
+  diet_contrast_table <- rename(diet_contrast_table, logP.trend = estimate)
+}
+if("lower.CL" %in% colnames(diet_contrast_table)) {
+  diet_contrast_table <- rename(diet_contrast_table, lower.HPD = lower.CL)
+}
+if("upper.CL" %in% colnames(diet_contrast_table)) {
+  diet_contrast_table <- rename(diet_contrast_table, upper.HPD = upper.CL)
+}
+
 density_slope_contrasts <- pairs(emtrends(mod_all, ~ density | group3 * diet, var = "logP"))
+# Convert emtrends object to a data frame for the Quarto document
+
+density_contrast_table <- as.data.frame(density_slope_contrasts)
+# Rename columns to match .qmd expectations
+if("estimate" %in% colnames(density_contrast_table)) {
+  density_contrast_table <- rename(density_contrast_table, estimate = estimate)
+}
+if("lower.CL" %in% colnames(density_contrast_table)) {
+  density_contrast_table <- rename(density_contrast_table, lower.HPD = lower.CL)
+}
+if("upper.CL" %in% colnames(density_contrast_table)) {
+  density_contrast_table <- rename(density_contrast_table, upper.HPD = upper.CL)
+}
 
 ## ---- 6. Visualizations ----
 
@@ -248,18 +275,63 @@ new_all_s1 <- prediction_grid_s1 %>%
     fit = apply(epred_s1, 2, median),
     lwr = apply(epred_s1, 2, quantile, 0.025),
     upr = apply(epred_s1, 2, quantile, 0.975),
-    Phenotype = factor(recode(group3, female="Female", brachylabic="Brachylabic", macrolabic="Macrolabic"),
-                       levels = c("Female", "Brachylabic", "Macrolabic"))
+    
+    diet = factor(
+      as.character(diet),
+      levels = c("GOOD", "POOR"),
+      labels = c("Good", "Poor")
+    ),
+    
+    Phenotype = factor(
+      recode(
+        group3,
+        female = "Female",
+        brachylabic = "Brachylabic",
+        macrolabic = "Macrolabic"
+      ),
+      levels = c("Female", "Brachylabic", "Macrolabic")
+    ),
+    
+    density = factor(
+      as.character(density),
+      levels = c("1", "4", "8"),
+      labels = c("Low", "Medium", "High")
+    )
   )
 
-figure_S1 <- ggplot(new_all_s1, aes(x = logP, y = fit, colour = diet, linetype = density, group = interaction(diet, density))) +
-  geom_point(data = dat.morphs, aes(x = logP, y = logF), inherit.aes = FALSE, colour = "grey50", alpha = 0.12, size = 0.7) +
+figure_S1 <- ggplot(
+  new_all_s1,
+  aes(
+    x = logP,
+    y = fit,
+    colour = diet,
+    linetype = density,
+    group = interaction(diet, density)
+  )
+) +
+  geom_point(
+    data = dat.morphs,
+    aes(x = logP, y = logF),
+    inherit.aes = FALSE,
+    colour = "grey50",
+    alpha = 0.12,
+    size = 0.7
+  ) +
   geom_line(linewidth = 1.1) +
   facet_wrap(~ Phenotype, nrow = 1) +
-  labs(x = "log(Pronotum length, mm)", y = "log(Forceps length, mm)", colour = "Diet", linetype = "Density") +
+  labs(
+    x = "log(Pronotum length, mm)",
+    y = "log(Forceps length, mm)",
+    colour = "Diet",
+    linetype = "Density"
+  ) +
   theme_bw() +
-  theme(panel.grid = element_blank(), strip.text = element_text(size = 13, face = "bold"),
-        axis.title = element_text(size = 15, face = "bold"), axis.text = element_text(size = 12))
+  theme(
+    panel.grid = element_blank(),
+    strip.text = element_text(size = 13, face = "bold"),
+    axis.title = element_text(size = 15, face = "bold"),
+    axis.text = element_text(size = 12)
+  )
 
 ggsave("figure_S1.jpg", plot = figure_S1, width = 10, height = 6, dpi = 300)
 
@@ -316,21 +388,108 @@ obs_data_s2 <- dat.morphs %>%
     forceps_obs = exp(logF)
   )
 
+# Ensure prediction points occur in the correct plotting order
+plot_data_s2 <- plot_data_s2 %>%
+  arrange(
+    Phenotype,
+    Density_lab,
+    Diet_lab,
+    Model,
+    pronotum_pred
+  )
+
 figure_s_quadratic <- ggplot() +
-  geom_point(data = obs_data_s2, aes(x = pronotum_obs, y = forceps_obs, colour = Diet_lab), alpha = 0.18, size = 0.7) +
-  geom_ribbon(data = filter(plot_data_s2, Model == "Quadratic"), 
-              aes(x = pronotum_pred, ymin = forceps_low, ymax = forceps_high, fill = Diet_lab), alpha = 0.18, colour = NA) +
-  geom_line(data = filter(plot_data_s2, Model == "Linear"), 
-            aes(x = pronotum_pred, y = forceps_med, colour = Diet_lab, linetype = Model), colour = "grey30", linewidth = 0.65) +
-  geom_line(data = filter(plot_data_s2, Model == "Quadratic"), 
-            aes(x = pronotum_pred, y = forceps_med, colour = Diet_lab, linetype = Model), linewidth = 1) +
-  facet_grid(rows = vars(Phenotype), cols = vars(Density_lab), scales = "free_y") +
-  scale_x_log10() + scale_y_log10() +
-  scale_linetype_manual(name = "Model", values = c("Linear" = "dotdash", "Quadratic" = "solid"),
-                       labels = c("Linear model", "Quadratic model")) +
-  labs(x = "Pronotum length (mm)", y = "Forceps length (mm)", colour = "Diet") +
+  
+  geom_point(
+    data = obs_data_s2,
+    aes(
+      x = pronotum_obs,
+      y = forceps_obs,
+      colour = Diet_lab
+    ),
+    alpha = 0.18,
+    size = 0.7
+  ) +
+  
+  geom_ribbon(
+    data = filter(plot_data_s2, Model == "Quadratic"),
+    aes(
+      x = pronotum_pred,
+      ymin = forceps_low,
+      ymax = forceps_high,
+      fill = Diet_lab,
+      group = Diet_lab
+    ),
+    alpha = 0.18,
+    colour = NA,
+    show.legend = FALSE
+  ) +
+  
+  # Linear-model predictions: grey lines, grouped separately by diet
+  geom_line(
+    data = filter(plot_data_s2, Model == "Linear"),
+    aes(
+      x = pronotum_pred,
+      y = forceps_med,
+      group = Diet_lab,
+      linetype = Model
+    ),
+    colour = "grey30",
+    linewidth = 0.65
+  ) +
+  
+  # Quadratic-model predictions: coloured lines, grouped separately by diet
+  geom_line(
+    data = filter(plot_data_s2, Model == "Quadratic"),
+    aes(
+      x = pronotum_pred,
+      y = forceps_med,
+      colour = Diet_lab,
+      group = Diet_lab,
+      linetype = Model
+    ),
+    linewidth = 1
+  ) +
+  
+  facet_grid(
+    rows = vars(Phenotype),
+    cols = vars(Density_lab),
+    scales = "free_y"
+  ) +
+  
+  scale_x_log10() +
+  scale_y_log10() +
+  
+  scale_linetype_manual(
+    name = "Model",
+    values = c(
+      Linear = "dotdash",
+      Quadratic = "solid"
+    ),
+    labels = c(
+      Linear = "Linear model",
+      Quadratic = "Quadratic model"
+    )
+  ) +
+  
+  labs(
+    x = "Pronotum length (mm)",
+    y = "Forceps length (mm)",
+    colour = "Diet"
+  ) +
+  
+  guides(
+    colour = guide_legend(order = 1),
+    linetype = guide_legend(order = 2)
+  ) +
+  
   theme_classic() +
-  theme(legend.position = "top", strip.text = element_text(face = "bold"), axis.title = element_text(face = "bold"))
+  
+  theme(
+    legend.position = "top",
+    strip.text = element_text(face = "bold"),
+    axis.title = element_text(face = "bold")
+  )
 
 ggsave("figure_S2.jpg", plot = figure_s_quadratic, width = 10, height = 6, dpi = 300)
 

@@ -135,7 +135,6 @@ table_s2_ft
 \newpage
 
 **Table S3.** Posterior summaries from the unified three-group Bayesian allometry model. The model estimated log forceps length as a function of log pronotum length, phenotypic group, diet, density, and all interactions, with varying intercepts and body-size slopes for maternal family and a varying intercept for rearing dish. Reference levels were female, good diet, and low density. Values are posterior medians and 95% credible intervals.
-
 ```{r}
 #| echo: false
 #| message: false
@@ -238,7 +237,6 @@ flextable(table_s3) %>%
   autofit()
 ```
 
-
 \newpage
 
 **Table S4.** Leave-one-out cross-validation comparison of the linear and quadratic allometry models. Both models included phenotypic group (female, brachylabic male, and macrolabic male), diet, density, body size (log pronotum length), and all interactions among these predictors, with varying intercepts and body-size slopes for maternal family and a varying intercept for rearing dish. The quadratic model additionally included a squared body-size term and its interactions with phenotypic group, diet, and density. Models were compared using expected log predictive density (ELPD), with larger values indicating better expected out-of-sample predictive performance. ELPD differences are reported relative to the best-supported model.
@@ -266,10 +264,6 @@ flextable(loo_table_formatted) %>%
 #| echo: false
 #| message: false
 #| warning: false
-
-library(dplyr)
-library(flextable)
-library(emmeans)
 
 slopes_all <- emtrends(
   mod_all,
@@ -357,6 +351,166 @@ table_s6 <- contrast_table %>%
 flextable(table_s6) %>%
   merge_v(j = c("Diet", "Density")) %>%
   valign(j = c("Diet", "Density"), valign = "top") %>%
+  fontsize(size = 9, part = "all") %>%
+  bold(part = "header") %>%
+  theme_booktabs() %>%
+  autofit()
+```
+
+\newpage
+
+**Table S7.** Good-diet minus poor-diet contrasts in condition-specific allometric slopes within each phenotypic group and density treatment. Contrasts were estimated from the unified three-group Bayesian allometry model. Negative values indicate a steeper estimated slope under poor diet. Values are posterior medians and 95% credible intervals.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+# Diet contrasts in allometric slope within each
+# phenotypic group × density combination
+table_s7 <- diet_contrast_table %>%
+  mutate(
+    group3 = recode(
+      group3,
+      female = "Female",
+      brachylabic = "Brachylabic male",
+      macrolabic = "Macrolabic male"
+    ),
+
+    group3 = factor(
+      group3,
+      levels = c(
+        "Female",
+        "Brachylabic male",
+        "Macrolabic male"
+      )
+    ),
+
+    density = recode(
+      density,
+      `1` = "Low",
+      `4` = "Medium",
+      `8` = "High"
+    ),
+
+    density = factor(
+      density,
+      levels = c("Low", "Medium", "High")
+    ),
+
+    contrast = recode(
+      contrast,
+      "GOOD - POOR" = "Good − poor"
+    )
+  ) %>%
+  arrange(group3, density) %>%
+  transmute(
+    `Phenotypic group` = group3,
+    Density = density,
+    Contrast = contrast,
+    `Slope difference` = round(estimate, 2),
+    `95% CrI` = paste0(
+      round(lower.HPD, 2),
+      ", ",
+      round(upper.HPD, 2)
+    )
+  )
+
+flextable(table_s7) %>%
+  merge_v(j = c("Phenotypic group", "Density")) %>%
+  valign(
+    j = c("Phenotypic group", "Density"),
+    valign = "top"
+  ) %>%
+  fontsize(size = 9, part = "all") %>%
+  bold(part = "header") %>%
+  theme_booktabs() %>%
+  autofit()
+```
+
+\newpage
+
+**Table S8.** Pairwise contrasts among density treatments in condition-specific allometric slopes within each phenotypic group and diet treatment. Contrasts were estimated from the unified three-group Bayesian allometry model and are reported as the first density minus the second. Negative values indicate a steeper estimated slope at the second density. Values are posterior medians and 95% credible intervals.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+# Density contrasts in allometric slope within each
+# phenotypic group × diet combination
+density_slope_contrasts <- pairs(
+  emtrends(
+    mod_all,
+    ~ density | group3 * diet,
+    var = "logP"
+  )
+)
+
+density_contrast_table <- as.data.frame(density_slope_contrasts)
+
+table_s8 <- density_contrast_table %>%
+  mutate(
+    group3 = recode(
+      group3,
+      female = "Female",
+      brachylabic = "Brachylabic male",
+      macrolabic = "Macrolabic male"
+    ),
+
+    group3 = factor(
+      group3,
+      levels = c(
+        "Female",
+        "Brachylabic male",
+        "Macrolabic male"
+      )
+    ),
+
+    diet = recode(
+      diet,
+      GOOD = "Good",
+      POOR = "Poor"
+    ),
+
+    diet = factor(
+      diet,
+      levels = c("Good", "Poor")
+    ),
+
+    contrast = recode(
+      contrast,
+      "density1 - density4" = "Low − medium",
+      "density1 - density8" = "Low − high",
+      "density4 - density8" = "Medium − high"
+    ),
+
+    contrast = factor(
+      contrast,
+      levels = c(
+        "Low − medium",
+        "Low − high",
+        "Medium − high"
+      )
+    )
+  ) %>%
+  arrange(group3, diet, contrast) %>%
+  transmute(
+    `Phenotypic group` = group3,
+    Diet = diet,
+    Contrast = contrast,
+    `Slope difference` = round(estimate, 2),
+    `95% CrI` = paste0(
+      round(lower.HPD, 2),
+      ", ",
+      round(upper.HPD, 2)
+    )
+  )
+
+flextable(table_s8) %>%
+  merge_v(j = c("Phenotypic group", "Diet")) %>%
+  valign(
+    j = c("Phenotypic group", "Diet"),
+    valign = "top"
+  ) %>%
   fontsize(size = 9, part = "all") %>%
   bold(part = "header") %>%
   theme_booktabs() %>%
