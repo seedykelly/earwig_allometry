@@ -1,5 +1,5 @@
 ---
-title: "Supplemental Material: Hierarchical structuring of weapon allometry in the European earwig."
+title: "Supplemental Material: Sexual dimorphism of weapon allometry in the European earwig."
 authors:
   - name: Céline Ozkan
     affiliations:
@@ -358,7 +358,7 @@ flextable(table_s6) %>%
 
 \newpage
 
-::: {#fig-sone fig-cap="Relationship between pronotum length and forceps length in female, brachylabic male, and macrolabic male Forficula auricularia sensu lato. Points represent individual earwigs. Lines show fitted values from the hierarchical Bayesian allometry model for each combination of diet treatment (good versus poor) and density treatment (1, 4, or 8 individuals per dish). Females and brachylabic males exhibited broadly similar scaling relationships across environments, whereas macrolabic males showed greater divergence among treatment combinations. Note that macrolabic males were uncommon under poor-diet conditions (Table S1), and estimates for these environments should therefore be interpreted cautiously."}
+::: {#fig-sone fig-cap="Relationship between pronotum length and forceps length in female, brachylabic male, and macrolabic male Forficula auricularia sensu lato. Points represent individual earwigs. Lines show fitted values from the Bayesian allometry model for each combination of diet treatment (good versus poor) and density treatment (1, 4, or 8 individuals per dish). Females and brachylabic males exhibited broadly similar scaling relationships across environments, whereas macrolabic males showed greater divergence among treatment combinations. Note that macrolabic males were uncommon under poor-diet conditions (Table S1), and estimates for these environments should therefore be interpreted cautiously."}
 ![](figure_S1.jpg)
 :::
 

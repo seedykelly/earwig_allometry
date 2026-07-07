@@ -1,5 +1,5 @@
 ---
-title: "Supplemental Material: Hierarchical structuring of weapon allometry in the European earwig."
+title: "Supplemental Material: Sexual dimorphism of weapon allometry in the European earwig."
 authors:
   - name: Céline Ozkan
     affiliations:
@@ -407,7 +407,7 @@ table_s7 <- diet_contrast_table %>%
     `Phenotypic group` = group3,
     Density = density,
     Contrast = contrast,
-    `Slope difference` = round(estimate, 2),
+    `Slope difference` = round(logP.trend, 2),
     `95% CrI` = paste0(
       round(lower.HPD, 2),
       ", ",
@@ -519,7 +519,7 @@ flextable(table_s8) %>%
 
 \newpage
 
-::: {#fig-sone fig-cap="Relationship between log pronotum length and log forceps length in female, brachylabic male, and macrolabic male *Forficula auricularia sensu lato*. Points represent individual earwigs, and lines show population-level fitted values from the linear hierarchical Bayesian allometry model. Line color denotes developmental diet, and line type denotes rearing density. Treatment-specific relationships were broadly similar among females and brachylabic males. Relationships among macrolabic males were more variable, particularly under poor diet, but poor-diet macrolabic males were uncommon and estimates for these conditions should therefore be interpreted cautiously."}
+::: {#fig-sone fig-cap="Relationship between log pronotum length and log forceps length in female, brachylabic male, and macrolabic male *Forficula auricularia sensu lato*. Points represent individual earwigs, and lines show population-level fitted values from the linear Bayesian allometry model. Line color denotes developmental diet, and line type denotes rearing density. Treatment-specific relationships were broadly similar among females and brachylabic males. Relationships among macrolabic males were more variable, particularly under poor diet, but poor-diet macrolabic males were uncommon and estimates for these conditions should therefore be interpreted cautiously."}
 ![](figure_S1.jpg)
 :::
 
